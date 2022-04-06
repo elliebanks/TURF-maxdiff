@@ -24,15 +24,27 @@ import { useEffect } from "react";
 export default function SideBySidePage() {
   const { setups, setSetups } = React.useContext(SetupContext);
   console.log(setups);
-  // console.log(setups[0]);
-  // const setupClaimState = setups[0];
-  // console.log(setupClaimState["claimState"]);
-  // const myClaimStates = setupClaimState["claimState"];
-  // console.log(Object.values(myClaimStates));
-  // const values = Object.values(myClaimStates);
-  // const keys = Object.keys(myClaimStates);
+  // const { claimState } = React.useContext(CheckboxContext);
+
+  const getClaimStateFromSetups = setups.map((setup) => setup["claimState"]);
+  console.log(getClaimStateFromSetups);
 
   const { claims } = React.useContext(ClaimsContext);
+
+  const mySet = {
+    claims: claims,
+    claimStates: getClaimStateFromSetups,
+  };
+  console.log(mySet);
+  // console.log(mySet["claims"]);
+  console.log(mySet["claimStates"]);
+  console.log(
+    mySet["claimStates"].map((claimState) => Object.values(claimState))
+  );
+
+  const claimStateArray = mySet["claimStates"].map((claimState) =>
+    Object.values(claimState)
+  );
 
   function getDecimalAsPercentString(decimal, numDecimals = 1) {
     if (typeof decimal !== "number") return "";
@@ -60,20 +72,6 @@ export default function SideBySidePage() {
   const handleDeleteSetup = () => {
     setSetups([]);
   };
-
-  // console.log(
-  //   setups.map((setup) => {
-  //     const mySetup = setup["claimState"];
-  //     console.log(mySetup);
-  //     const claimsAndTheirStates = Object.entries(mySetup);
-  //     console.log(claimsAndTheirStates);
-  //     {
-  //       claimsAndTheirStates.map((claims) =>
-  //         claims[1] === "Considered" ? "Considered" : ""
-  //       );
-  //     }
-  //   })
-  // );
 
   const exportToCSV = (event) => {
     event.preventDefault();
@@ -139,32 +137,28 @@ export default function SideBySidePage() {
           </Tr>
         </Thead>
         <Tbody>
-          {/*{summaryMetricKeys.map((summaryMetricKey) => (*/}
-          {/*  <Tr>*/}
-          {/*    <Th>{metricRendering[summaryMetricKey].displayLabel}</Th>*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Th />*/}
-          {/*    <Td />*/}
-          {/*    <Td />*/}
-          {/*    <Td />*/}
-          {/*    <Td />*/}
-          {/*    /!*{setups.map((set) => [*!/*/}
-          {/*    /!*  <Td isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>*!/*/}
-          {/*    /!*    {summaryMetricKey === "Average_Number_of_Items_Liked"*!/*/}
-          {/*    /!*      ? avgFormatter(set.summaryMetrics[summaryMetricKey])*!/*/}
-          {/*    /!*      : valueFormatter(set.summaryMetrics[summaryMetricKey])}*!/*/}
-          {/*     */}
-          {/*      <Td />,*/}
-          {/*      <Td />,*/}
-          {/*      <Td />,*/}
-          {/*    /!*])}*!/*/}
-          {/*  </Tr>*/}
-          {/*))}*/}
+          {summaryMetricKeys.map((summaryMetricKey) => (
+            <Tr>
+              <Th>{metricRendering[summaryMetricKey].displayLabel}</Th>
+              <Th />
+              <Th />
+              <Th />
+              <Th />
+              <Th />
+              <Th />
+              <Th />
+              <Td />
+              <Td />
+              <Td />
+              <Td />
+              {/*{setups.map((set) => [*/}
+              {/*  <Td isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>*/}
+              {/*    {summaryMetricKey === "Average_Number_of_Items_Liked"*/}
+              {/*      ? avgFormatter(set.summaryMetrics[summaryMetricKey])*/}
+              {/*      : valueFormatter(set.summaryMetrics[summaryMetricKey])}*/}
+              {/*])}*/}
+            </Tr>
+          ))}
         </Tbody>
       </Table>
 
@@ -184,13 +178,35 @@ export default function SideBySidePage() {
           </Tr>
         </Thead>
         <Tbody>
-          {claims.map((claim, i) => (
+          {mySet["claims"].map((claim, i) => (
             <Tr>
-              <Th w={1}>{i + 1}</Th>
-              <Td boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>{claim}</Td>
-              {/*{setups.map((setup) => )}*/}
+              <Th>{i + 1}</Th>
+              <Td>{claim}</Td>
+              {claimStateArray.map((claimState) => (
+                <Td textAlign={"center"}>{claimState[i]}</Td>
+              ))}
+
+              {/*{mySet["claimStates"].map((claimState) =>*/}
+              {/*    */}
+
+              {/*    /!*{" "}*!/*/}
+              {/*    /!*{claimState[claim] === "Considered"*!/*/}
+              {/*    /!*  ? "Considered"*!/*/}
+              {/*    /!*  : "Excluded"*!/*/}
+              {/*    /!*  ? "Excluded"*!/*/}
+              {/*    /!*  : "Offered"*!/*/}
+              {/*    /!*  ? "Offered"*!/*/}
+              {/*    /!*  : ""}*!/*/}
+
+              {/*)}*/}
             </Tr>
           ))}
+          {/*{claims.map((claim, i) => (*/}
+          {/*  <Tr>*/}
+          {/*    <Th w={1}>{i + 1}</Th>*/}
+          {/*    <Td boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>{claim}</Td>*/}
+          {/*  </Tr>*/}
+          {/*))}*/}
         </Tbody>
       </Table>
     </>

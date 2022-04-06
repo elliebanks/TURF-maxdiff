@@ -62,6 +62,7 @@ const TURFpage = () => {
   const [claimState, setClaimState] = React.useState(
     Object.fromEntries(claims.map((claim) => [claim, "Excluded"]))
   );
+  console.log(claimState);
 
   // onClose function passed to ErrorModal
   // when ErrorModal close button is clicked claims are set to [] => redirect to Upload File page
@@ -128,6 +129,7 @@ const TURFpage = () => {
     const allCurrentOfferingsArray = claimStateArray.filter(
       ([claim, stateValue]) => stateValue === "Offered"
     );
+    console.log(allCurrentOfferingsArray);
     // we need to work with an object, so turn the array of offered claims back to an object
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allCurrentOfferingsArray);
@@ -157,7 +159,6 @@ const TURFpage = () => {
   const toast = useToast();
 
   const handleAddSetup = () => {
-    // create a copy of claimState spread operator
     const newSetup = { claimState, summaryMetrics };
     setSetups((prevSetups) => [...prevSetups, newSetup]);
     toast({
@@ -167,9 +168,6 @@ const TURFpage = () => {
       status: "success",
     });
   };
-
-  // newSetup is an array of objects
-  // claimState is an object inside an array. The keys are claims and the values are the state (Offered, Considered, Excluded)
 
   const checkboxData = React.useMemo(
     () => ({
