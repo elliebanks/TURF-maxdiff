@@ -14,6 +14,7 @@ import {
   TabPanels,
   TabPanel,
   useToast,
+  useRadioGroup,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
 import { ClaimsContext } from "../App";
@@ -31,7 +32,6 @@ export const SetupContext = React.createContext(null);
 const TURFpage = () => {
   const [reach, setReach] = useState();
   const [favorite, setFavorite] = useState();
-  console.log(favorite);
   const [summaryMetrics, setSummaryMetrics] = useState({
     1: 0.0,
     2: 0.0,
@@ -41,28 +41,31 @@ const TURFpage = () => {
   // state property for ErrorModal to open
   const [isOpen, setIsOpen] = React.useState(false);
 
-  const {
-    value: currentOfferings,
-    getCheckboxProps: getCurrentOfferingsCheckboxProps,
-    setValue: setCurrentOfferings,
-  } = useCheckboxGroup({
-    defaultValue: [],
-  });
-
-  const {
-    value: considerationSet,
-    getCheckboxProps: getConsiderationSetCheckboxProps,
-    setValue: setConsiderationSet,
-  } = useCheckboxGroup({
-    defaultValue: [],
-  });
+  // const {
+  //   value: currentOfferings,
+  //   getCheckboxProps: getCurrentOfferingsCheckboxProps,
+  //   setValue: setCurrentOfferings,
+  // } = useCheckboxGroup({
+  //   defaultValue: [],
+  // });
+  //
+  // const {
+  //   value: considerationSet,
+  //   getCheckboxProps: getConsiderationSetCheckboxProps,
+  //   setValue: setConsiderationSet,
+  // } = useCheckboxGroup({
+  //   defaultValue: [],
+  // });
 
   const { claims, setClaims } = React.useContext(ClaimsContext);
 
   const [claimState, setClaimState] = React.useState(
-    Object.fromEntries(claims.map((claim) => [claim, "Excluded"]))
+    Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
   );
-  console.log(claimState);
+
+  // const [claimState, setClaimState] = React.useState(
+  //   Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
+  // );
 
   // onClose function passed to ErrorModal
   // when ErrorModal close button is clicked claims are set to [] => redirect to Upload File page
@@ -119,8 +122,6 @@ const TURFpage = () => {
     [claims]
   );
 
-  // sort
-
   const offeredClaims = React.useMemo(() => {
     // sets claim object to an array so that we can filter out the states that are considered/excluded
     const claimStateArray = Object.entries(claimState);
@@ -159,7 +160,7 @@ const TURFpage = () => {
   const toast = useToast();
 
   const handleAddSetup = () => {
-    const newSetup = { claimState, summaryMetrics };
+    const newSetup = [claimState, summaryMetrics];
     setSetups((prevSetups) => [...prevSetups, newSetup]);
     toast({
       title: "Success!",
@@ -173,23 +174,8 @@ const TURFpage = () => {
     () => ({
       claimState,
       setClaimState,
-      considerationSet,
-      currentOfferings,
-      setCurrentOfferings,
-      setConsiderationSet,
-      getConsiderationSetCheckboxProps,
-      getCurrentOfferingsCheckboxProps,
     }),
-    [
-      claimState,
-      setClaimState,
-      considerationSet,
-      currentOfferings,
-      setCurrentOfferings,
-      setConsiderationSet,
-      getCurrentOfferingsCheckboxProps,
-      getConsiderationSetCheckboxProps,
-    ]
+    [claimState, setClaimState]
   );
 
   const summaryData = React.useMemo(
@@ -250,10 +236,9 @@ const TURFpage = () => {
                         </VStack>
                       </Container>
                     </HStack>
-
-                    <DataTable />
                   </Flex>
                 </Container>
+                <DataTable />
               </TabPanel>
 
               <TabPanel>

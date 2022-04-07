@@ -4,11 +4,11 @@ import { SummaryContext } from "../Components/TURFpage";
 
 function SummaryMetrics() {
   const { summaryMetrics } = React.useContext(SummaryContext);
-  console.log(summaryMetrics);
+  // console.log(summaryMetrics);
 
   let avgLikedItemsDecimal = summaryMetrics["Average_Number_of_Items_Liked"];
   let roundedAvgLikedItems = Math.round(avgLikedItemsDecimal * 100) / 100;
-  console.log(roundedAvgLikedItems);
+  // console.log(roundedAvgLikedItems);
 
   let avgReachPercentage = getDecimalAsPercentString(summaryMetrics["Reach"]);
   let avgFavPercentage = getDecimalAsPercentString(

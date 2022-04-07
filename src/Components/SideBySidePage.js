@@ -17,44 +17,15 @@ import {
 } from "@chakra-ui/react";
 import { ClaimsContext } from "../App";
 import { CheckboxContext, SetupContext, SummaryContext } from "./TURFpage";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
-import { useEffect } from "react";
 
 export default function SideBySidePage() {
   const { setups, setSetups } = React.useContext(SetupContext);
-  console.log(setups);
-  // const { claimState } = React.useContext(CheckboxContext);
-
-  const getClaimStateFromSetups = setups.map((setup) => setup["claimState"]);
-  console.log(getClaimStateFromSetups);
 
   const { claims } = React.useContext(ClaimsContext);
 
-  const mySet = {
-    claims: claims,
-    claimStates: getClaimStateFromSetups,
-  };
-  console.log(mySet);
-  // console.log(mySet["claims"]);
-  console.log(mySet["claimStates"]);
-  console.log(
-    mySet["claimStates"].map((claimState) => Object.values(claimState))
-  );
-
-  const claimStateArray = mySet["claimStates"].map((claimState) =>
-    Object.values(claimState)
-  );
-
-  function getDecimalAsPercentString(decimal, numDecimals = 1) {
-    if (typeof decimal !== "number") return "";
-    const outOf100 = decimal * 100;
-    return outOf100.toFixed(numDecimals) + "%";
-  }
-
   const metricRendering = {
     Average_Number_of_Items_Liked: {
-      displayLabel: "Average Number of Liked Claims",
+      displayLabel: "Average Liked Claims",
     },
     Favorite_Percentage: {
       displayLabel: "Average Favorite",
@@ -68,6 +39,11 @@ export default function SideBySidePage() {
   const avgFormatter = (value) => Math.round(value * 100) / 100;
 
   const summaryMetricKeys = Object.keys(metricRendering);
+  // console.log(
+  //   summaryMetricKeys.map((summaryMetricKey) =>
+  //     setups.map((setup) => setup[1]?.[summaryMetricKey])
+  //   )
+  // );
 
   const handleDeleteSetup = () => {
     setSetups([]);
@@ -106,63 +82,32 @@ export default function SideBySidePage() {
           Delete Setups
         </Button>
       </HStack>
+
       <Table
-        align={"center"}
         size={"lg"}
-        maxW={"75%"}
         variant={"simple"}
-        marginBottom={6}
+        w={"85%"}
+        align={"center"}
+        marginTop={12}
       >
         <Thead>
-          <Tr>
-            <Th />
-            <Th />
-            <Th />
-            <Th />
-            <Th />
-            <Th />
-            <Th />
-            <Td />
-            <Td />
-            <Td />
-            <Td />
-            {setups.map((setup, i) => [
-              <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
-                Setup {i + 1}
-              </Th>,
-              <Th />,
-              <Th />,
-              <Th />,
-            ])}
-          </Tr>
-        </Thead>
-        <Tbody>
           {summaryMetricKeys.map((summaryMetricKey) => (
             <Tr>
-              <Th>{metricRendering[summaryMetricKey].displayLabel}</Th>
-              <Th />
-              <Th />
-              <Th />
-              <Th />
-              <Th />
-              <Th />
-              <Th />
               <Td />
-              <Td />
-              <Td />
-              <Td />
-              {/*{setups.map((set) => [*/}
-              {/*  <Td isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>*/}
-              {/*    {summaryMetricKey === "Average_Number_of_Items_Liked"*/}
-              {/*      ? avgFormatter(set.summaryMetrics[summaryMetricKey])*/}
-              {/*      : valueFormatter(set.summaryMetrics[summaryMetricKey])}*/}
-              {/*])}*/}
+              <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+                {metricRendering[summaryMetricKey].displayLabel}
+              </Th>
+              {setups.map((setup) => [
+                <Td isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+                  {setup[1]?.[summaryMetricKey] ===
+                  setup[1]?.["Average_Number_of_Items_Liked"]
+                    ? avgFormatter(setup[1]?.["Average_Number_of_Items_Liked"])
+                    : valueFormatter(setup[1]?.[summaryMetricKey])}
+                </Td>,
+              ])}
             </Tr>
           ))}
-        </Tbody>
-      </Table>
-
-      <Table size={"lg"} variant={"simple"} align={"center"} maxW={"75%"}>
+        </Thead>
         <Thead>
           <Tr>
             <Th w={1}>#</Th>
@@ -178,59 +123,23 @@ export default function SideBySidePage() {
           </Tr>
         </Thead>
         <Tbody>
-          {mySet["claims"].map((claim, i) => (
+          {claims.map((claim, i) => (
             <Tr>
               <Th>{i + 1}</Th>
-              <Td>{claim}</Td>
-              {claimStateArray.map((claimState) => (
-                <Td textAlign={"center"}>{claimState[i]}</Td>
+              <Td boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>{claim}</Td>
+              {setups.map((setup) => (
+                <Td
+                  w={"20%"}
+                  textAlign={"center"}
+                  boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
+                >
+                  {setup[0]?.[claim]}
+                </Td>
               ))}
-
-              {/*{mySet["claimStates"].map((claimState) =>*/}
-              {/*    */}
-
-              {/*    /!*{" "}*!/*/}
-              {/*    /!*{claimState[claim] === "Considered"*!/*/}
-              {/*    /!*  ? "Considered"*!/*/}
-              {/*    /!*  : "Excluded"*!/*/}
-              {/*    /!*  ? "Excluded"*!/*/}
-              {/*    /!*  : "Offered"*!/*/}
-              {/*    /!*  ? "Offered"*!/*/}
-              {/*    /!*  : ""}*!/*/}
-
-              {/*)}*/}
             </Tr>
           ))}
-          {/*{claims.map((claim, i) => (*/}
-          {/*  <Tr>*/}
-          {/*    <Th w={1}>{i + 1}</Th>*/}
-          {/*    <Td boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>{claim}</Td>*/}
-          {/*  </Tr>*/}
-          {/*))}*/}
         </Tbody>
       </Table>
     </>
   );
 }
-
-// {setups.map((setup) => [
-//                 <Td textAlign={"center"}>
-//                   {setup.currentOfferings.includes(claim) ? "X" : ""}
-//                 </Td>,
-//                 <Td textAlign={"center"}>
-//                   {setup.considerationSet.includes(claim) ? "X" : ""}
-//                 </Td>,
-//                 <Td textAlign={"center"}>
-//                   {setup.currentOfferings.includes(claim)
-//                     ? getDecimalAsPercentString(setup.reach?.[claim])
-//                     : ""}
-//                 </Td>,
-//                 <Td
-//                   textAlign={"center"}
-//                   boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-//                 >
-//                   {setup.currentOfferings.includes(claim)
-//                     ? getDecimalAsPercentString(setup.favorite?.[claim])
-//                     : ""}
-//                 </Td>,
-//               ])}

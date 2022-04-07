@@ -16,24 +16,11 @@ import {
   Radio,
   Box,
 } from "@chakra-ui/react";
-import GroupCheckbox from "../Top Level Components/GroupCheckbox";
 import { CheckboxContext, SummaryContext } from "./TURFpage";
 import { ClaimsContext } from "../App.js";
 
 const DataTable = () => {
-  const {
-    claimState,
-    setClaimState,
-    // currentOfferings,
-    // considerationSet,
-    // excludedSet,
-    // setExcludedSet,
-    // setCurrentOfferings,
-    // setConsiderationSet,
-    // getExcludedSetCheckboxProps,
-    // getCurrentOfferingsCheckboxProps,
-    // getConsiderationSetCheckboxProps,
-  } = React.useContext(CheckboxContext);
+  const { claimState, setClaimState } = React.useContext(CheckboxContext);
 
   const { reach, favorite } = React.useContext(SummaryContext);
 
@@ -51,14 +38,13 @@ const DataTable = () => {
     });
   };
 
-  // function takes the state of each claim and creates a new state to set them all to Excluded on button click
-  function resetClaimsToExcluded() {
+  // function takes the state of each claim and creates a new state to set them all to Considered on button click
+  function resetClaimsToConsidered() {
     setClaimState((prev) => {
       const newClaimState = Object.keys(prev).map((claim) => [
         claim,
-        "Excluded",
+        "Considered",
       ]);
-      console.log(newClaimState);
       return Object.fromEntries(newClaimState);
     });
   }
@@ -71,115 +57,67 @@ const DataTable = () => {
   }
 
   return (
-    <>
-      <Table variant="simple" size={"lg"}>
-        <Thead>
-          <Tr>
-            <Th />
-            <Td>
-              <Button onClick={resetClaimsToExcluded} size={"lg"}>
-                Reset
-              </Button>
-            </Td>
-
-            <Th />
-            <Th />
-            <Th />
-          </Tr>
-        </Thead>
-        <Thead>
-          <Tr>
-            <Th>#</Th>
+    <Table variant="simple" size={"lg"} w={"85%"} align={"center"}>
+      <Thead>
+        <Tr>
+          <Th />
+          <Td>
+            <Button onClick={resetClaimsToConsidered} size={"md"}>
+              Reset Claims to Considered
+            </Button>
+          </Td>
+          <Th />
+          <Th />
+          <Th />
+          <Th />
+          <Th />
+        </Tr>
+      </Thead>
+      <Thead>
+        <Tr>
+          <Th>#</Th>
+          <Th>Claim</Th>
+          <Th textAlign={"center"}>Offered</Th>
+          <Th textAlign={"center"}>Considered</Th>
+          <Th textAlign={"center"}>Excluded</Th>
+          <Th textAlign={"center"}>Reach</Th>
+          <Th textAlign={"center"} boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+            Favorite
+          </Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        {claims.map((claim, i) => (
+          <RadioGroup
+            as={Tr}
+            value={claimState[claim]} // value of each radio button in the group is the state of the claim
+            onChange={(newValue) => handleClaimStateChange(claim, newValue)}
+          >
+            <Th>{i + 1}</Th>
+            <Td>{claim}</Td>
+            <Th textAlign={"center"}>
+              <Radio value={"Offered"} />
+            </Th>
+            <Th textAlign={"center"}>
+              <Radio value={"Considered"} />
+            </Th>
+            <Th textAlign={"center"}>
+              <Radio value={"Excluded"} />
+            </Th>
+            <Th textAlign={"center"}>
+              {getDecimalAsPercentString(reach?.[claim])}
+            </Th>
             <Th
               textAlign={"center"}
               boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
             >
-              Claim
+              {getDecimalAsPercentString(favorite?.[claim])}
             </Th>
-            <RadioGroup
-              boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-              justify={"space-evenly"}
-              display={"inline-block"}
-              m={"5px 20px 0px 150px"}
-            >
-              <Th>Offered</Th>
-              <Th>Considered</Th>
-              <Th>Excluded</Th>
-            </RadioGroup>
-
-            <Th textAlign={"center"}>Reach</Th>
-            <Th
-              textAlign={"center"}
-              boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-            >
-              Favorite
-            </Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {claims.map((claim, i) => (
-            <Tr key={i}>
-              <Th>{i + 1}</Th>
-              <Td
-                key={i}
-                boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-                textAlign={"center"}
-              >
-                {claim}
-              </Td>
-              {/*<Container justify={"space-evenly"} border={"1px solid black"}>*/}
-              <RadioGroup
-                as={Td}
-                value={claimState[claim]}
-                onChange={(newValue) => handleClaimStateChange(claim, newValue)}
-                boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-                display={"inline-block"}
-                m={"5px 5px 0 162px"}
-              >
-                <HStack spacing={150}>
-                  <Radio value={"Offered"} />
-
-                  <Radio value={"Considered"} />
-
-                  <Radio value={"Excluded"} />
-                </HStack>
-              </RadioGroup>
-              {/*</Container>*/}
-
-              {/*<Box>*/}
-
-              {/*</Box>*/}
-              <Td textAlign={"center"}>
-                {getDecimalAsPercentString(reach?.[claim])}
-              </Td>
-              <Td
-                textAlign={"center"}
-                boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
-              >
-                {getDecimalAsPercentString(favorite?.[claim])}
-              </Td>
-            </Tr>
-          ))}
-        </Tbody>
-      </Table>
-    </>
+          </RadioGroup>
+        ))}
+      </Tbody>
+    </Table>
   );
 };
 
 export default DataTable;
-
-{
-  /*<GroupCheckbox*/
-}
-{
-  /*  {...getConsiderationSetCheckboxProps({ value: claim })}*/
-}
-{
-  /*/>*/
-}
-{
-  /*</Td>*/
-}
-{
-  /*<Td>*/
-}
