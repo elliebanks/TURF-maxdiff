@@ -7,7 +7,7 @@ from app.api.errors import error_response
 from app.main import bp
 from app.models import MaxDiffProject
 from app.save_file import  save_file
-from mdfunctions import process_raw_util_xl_file, calc_reach_metrics
+from mdfunctions import process_raw_util_xl_file, calc_reach_metrics, get_incremental_reach
 
 
 @bp.route('/api/request_load_pickle_sim', methods=['POST'])
@@ -95,7 +95,6 @@ def export_to_csv():
 
 
 
-
 @bp.route('/api/project', methods=["DELETE"])
 def delete_project_from_db():
 	# check the db to find the project
@@ -109,3 +108,23 @@ def delete_project_from_db():
 		db.session.commit()
 		return jsonify([])
 
+@bp.route("/api/calc_incremental_reach", methods=["GET", "POST"])
+def incremental_reach():
+	mdp = MaxDiffProject().query.first()
+	get_config = mdp.config
+	maxdiff_scores = get_config['maxdiff_scores']
+	weights = get_config['weights']
+	maximize_reach_data = request.get_json() or {}
+	print(maximize_reach_data)
+	items_to_turn_on = maximize_reach_data["numberItemsTurnOn"]
+	num_items_to_turn_on = int(items_to_turn_on)
+	claims_offered_dict = maximize_reach_data["claimsOn"]
+	# print(claims_offered_dict)
+	claims_considered_dict = maximize_reach_data["claimsConsidered"]
+	claims_considered_list = list(claims_considered_dict.keys())
+	claims_offered_list = list(claims_offered_dict.keys())
+	# print(claims_offered_list)
+	metric_calculations = calc_reach_metrics(maxdiff_scores, claims_offered_list, weights)
+	# print(metric_calculations)
+	calc_max_reach = get_incremental_reach(maxdiff_scores, claims_considered_list, claims_offered_list, num_items_to_turn_on, weights)
+	print(calc_max_reach)

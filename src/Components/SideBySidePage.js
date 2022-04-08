@@ -35,7 +35,7 @@ export default function SideBySidePage() {
     },
   };
 
-  const valueFormatter = (value) => (value * 100).toFixed(2) + "%";
+  const valueFormatter = (value) => (value * 100).toFixed(1) + "%";
   const avgFormatter = (value) => Math.round(value * 100) / 100;
 
   const summaryMetricKeys = Object.keys(metricRendering);
@@ -98,12 +98,12 @@ export default function SideBySidePage() {
                 {metricRendering[summaryMetricKey].displayLabel}
               </Th>
               {setups.map((setup) => [
-                <Td isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+                <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
                   {setup[1]?.[summaryMetricKey] ===
                   setup[1]?.["Average_Number_of_Items_Liked"]
                     ? avgFormatter(setup[1]?.["Average_Number_of_Items_Liked"])
                     : valueFormatter(setup[1]?.[summaryMetricKey])}
-                </Td>,
+                </Th>,
               ])}
             </Tr>
           ))}

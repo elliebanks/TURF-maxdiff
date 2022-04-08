@@ -22,7 +22,7 @@ function SummaryMetrics() {
   }
 
   return (
-    <Table variant="simple" size={"md"}>
+    <Table variant="simple" size={"lg"} w={"50%"}>
       <Thead>
         <Tr>
           <Th>Summary Metrics</Th>

@@ -15,6 +15,7 @@ import {
   TabPanel,
   useToast,
   useRadioGroup,
+  Input,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
 import { ClaimsContext } from "../App";
@@ -22,7 +23,11 @@ import ErrorModal from "./ErrorModal";
 import SummaryMetrics from "../Top Level Components/SummaryMetrics";
 import MaximizeReach from "../Top Level Components/MaximizeReach";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faTrashCan } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChartLine,
+  faPlus,
+  faTrashCan,
+} from "@fortawesome/free-solid-svg-icons";
 import SideBySidePage from "./SideBySidePage";
 
 export const CheckboxContext = React.createContext(null);
@@ -30,6 +35,7 @@ export const SummaryContext = React.createContext(null);
 export const SetupContext = React.createContext(null);
 
 const TURFpage = () => {
+  // STATE VARIABLES
   const [reach, setReach] = useState();
   const [favorite, setFavorite] = useState();
   const [summaryMetrics, setSummaryMetrics] = useState({
@@ -37,57 +43,32 @@ const TURFpage = () => {
     2: 0.0,
     3: 0.0,
   });
-
-  // state property for ErrorModal to open
-  const [isOpen, setIsOpen] = React.useState(false);
-
-  // const {
-  //   value: currentOfferings,
-  //   getCheckboxProps: getCurrentOfferingsCheckboxProps,
-  //   setValue: setCurrentOfferings,
-  // } = useCheckboxGroup({
-  //   defaultValue: [],
-  // });
-  //
-  // const {
-  //   value: considerationSet,
-  //   getCheckboxProps: getConsiderationSetCheckboxProps,
-  //   setValue: setConsiderationSet,
-  // } = useCheckboxGroup({
-  //   defaultValue: [],
-  // });
-
   const { claims, setClaims } = React.useContext(ClaimsContext);
-
   const [claimState, setClaimState] = React.useState(
     Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
   );
+  const [isOpen, setIsOpen] = React.useState(false); // state property for Error Modal
 
-  // const [claimState, setClaimState] = React.useState(
-  //   Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
-  // );
+  const [numberOfItemsToTurnOn, setNumberOfItemsToTurnOn] = React.useState("");
+  console.log(numberOfItemsToTurnOn);
 
-  // onClose function passed to ErrorModal
-  // when ErrorModal close button is clicked claims are set to [] => redirect to Upload File page
-  // ErrorModal is removed
+  // DELETE PROJECT AND SETUP ERROR MODAL
   function onClose() {
-    setClaims([]);
-    setIsOpen(false);
+    // onClose function passed to ErrorModal
+    setClaims([]); // when ErrorModal close button is clicked claims are set to [] => redirect to Upload File page
+    setIsOpen(false); // ErrorModal is removed
   }
 
-  // handleDelete function goes to backend to check for project in db
-  // if no project is found error status is returned and ErrorModal is displayed
-  // if project is found - project is deleted from db and claims are set to [] => redirect to Upload File page
   const handleDelete = () => {
     let status = 0;
-    fetch("/api/project", { method: "DELETE" })
+    fetch("/api/project", { method: "DELETE" }) // handleDelete function goes to backend to check for project in db
       .then((res) => {
         status = res.status;
         return res.json();
       })
       .then((data) => {
         if (status === 400) {
-          setIsOpen(true);
+          setIsOpen(true); // if no project is found error status is returned and ErrorModal is displayed
         } else {
           console.log(data);
           toast({
@@ -96,11 +77,12 @@ const TURFpage = () => {
             status: "success",
             isClosable: true,
           });
-          setClaims(data);
+          setClaims(data); // if project is found - project is deleted from db and claims are set to [] => redirect to Upload File page
         }
       });
   };
 
+  // CALCULATE AND PULL REACH SCORES
   useEffect(
     function getReachScores() {
       fetch("/api/get_reach_scores", {
@@ -122,6 +104,7 @@ const TURFpage = () => {
     [claims]
   );
 
+  // FILTER FOR OFFERED CLAIMS SO WE CAN GET SUMMARY METRICS FOR THOSE CLAIMS
   const offeredClaims = React.useMemo(() => {
     // sets claim object to an array so that we can filter out the states that are considered/excluded
     const claimStateArray = Object.entries(claimState);
@@ -135,6 +118,21 @@ const TURFpage = () => {
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allCurrentOfferingsArray);
   }, [claimState]);
+
+  const consideredClaims = React.useMemo(() => {
+    // sets claim object to an array so that we can filter out the states that are considered/excluded
+    const claimStateArray = Object.entries(claimState);
+    // filter the array of claims and their state values
+    // take each claim that is in the 'offered' column (state) and put those claims into an array
+    const allConsideredClaimsArray = claimStateArray.filter(
+      ([claim, stateValue]) => stateValue === "Considered"
+    );
+    console.log(allConsideredClaimsArray);
+    // we need to work with an object, so turn the array of offered claims back to an object
+    // so we can send an object to our get summary metrics route
+    return Object.fromEntries(allConsideredClaimsArray);
+  }, [claimState]);
+  console.log(consideredClaims);
 
   useEffect(
     function getSummaryMetrics() {
@@ -155,6 +153,30 @@ const TURFpage = () => {
     [offeredClaims]
   );
 
+  const maximizeReachData = {
+    claimsOn: offeredClaims,
+    claimsConsidered: consideredClaims,
+    numberItemsTurnOn: numberOfItemsToTurnOn,
+  };
+
+  function handleMaximizeReach() {
+    let status = 0;
+    fetch("/api/calc_incremental_reach", {
+      method: "POST",
+      body: JSON.stringify(maximizeReachData),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        return res.json();
+      })
+      .then((data) => {
+        console.log(data);
+      });
+  }
+
+  // ADD SETUP TO SIDE BY SIDE PAGE
   const [setups, setSetups] = React.useState([]);
 
   const toast = useToast();
@@ -170,6 +192,7 @@ const TURFpage = () => {
     });
   };
 
+  // CONTEXT DATA
   const checkboxData = React.useMemo(
     () => ({
       claimState,
@@ -217,28 +240,30 @@ const TURFpage = () => {
                     </HStack>
                   </Button>
                 </HStack>
-                <Container maxW="75%" align="center">
-                  <Flex direction={"column"}>
-                    <HStack
-                      p={8}
-                      spacing={16}
-                      align={"center"}
-                      justify={"space-evenly"}
-                    >
-                      <ErrorModal isOpen={isOpen} onClose={onClose} />
-
-                      <Container maxW={"container.md"} spacing={4} p={8}>
-                        <VStack spacing={10}>
-                          <SummaryMetrics />
-                          <HStack spacing={8} m={8} justify={"flex-end"}>
-                            <MaximizeReach />
-                          </HStack>
-                        </VStack>
-                      </Container>
+                <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
+                <VStack spacing={10} m={10} p={4}>
+                  <SummaryMetrics />
+                  <Button size="lg" onClick={handleMaximizeReach}>
+                    <HStack>
+                      <FontAwesomeIcon icon={faChartLine} />
+                      <Text>Maximize Reach</Text>
                     </HStack>
-                  </Flex>
-                </Container>
-                <DataTable />
+                  </Button>
+                  <HStack float={"left"}>
+                    <Text>
+                      Number of Considered Claims You Would Like To Offer:{" "}
+                    </Text>
+                    <Input
+                      textAlign={"center"}
+                      value={numberOfItemsToTurnOn}
+                      onChange={(e) => setNumberOfItemsToTurnOn(e.target.value)}
+                      placeholder="1"
+                      size="sm"
+                      w={"20%"}
+                    />
+                  </HStack>
+                  <DataTable />
+                </VStack>
               </TabPanel>
 
               <TabPanel>

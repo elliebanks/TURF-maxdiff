@@ -85,4 +85,52 @@ def calc_reach_metrics(maxdiff_scores, claims_on_list, weights):
         }
     }
 
+"""
+reach function takes in inputs & returns a dictionary with 
+    keys: items in order of which they need to be turned on in the simulator, 
+    values: metrics in the calc_reach_metrics function
+as we go along the keys in the dictionary, values/metrics include the previous items already 'offered'
+"""
+
+
+
+def get_incremental_reach(max_diff_scores, item_considered, item_on, number_of_items_to_turn_on, weights):
+    current_items_to_consider = item_considered.copy()
+    current_item_on = item_on.copy()
+
+    get_incremental_reach_summary_metrics = {}  # setting to blank dict
+
+    for i in range(number_of_items_to_turn_on):  # looping for # of items to be added
+
+        steps = {}  # setting steps to be blank dict
+        reach_of_items_in_steps = {}  # setting reach_of_items_in_steps to be blank dict
+        for test_item in current_items_to_consider:  # looping through all the items that are considered
+
+            new_items_on = [*current_item_on, test_item]  # adding test item to items that are on already
+
+            summary_scores_tested = calc_reach_metrics(max_diff_scores, new_items_on,
+                                                       weights)  # calling reach_metric_function
+
+
+            steps[
+                test_item] = summary_scores_tested  # adding the reach_metrics to the steps dict for all the items that are considered, with items name as key
+
+            reach_of_items_in_steps[test_item] = summary_scores_tested['Summary_Metrics'][
+                'Reach']  # adding ONLY the unduplicated reach to the reach_of_items_in_steps dict for all the items that are considered, with items name as key
+
+        get_incremental_reach_summary_metrics[max(reach_of_items_in_steps, key=reach_of_items_in_steps.get)] = \
+        steps[max(reach_of_items_in_steps,
+                  key=reach_of_items_in_steps.get)]  # Item with max reach is key, value is reach metrics of that item
+        current_item_on.append(max(reach_of_items_in_steps,
+                                   key=reach_of_items_in_steps.get))  # add the item with max reach with item that is on
+        current_items_to_consider.remove(max(reach_of_items_in_steps,
+                                             key=reach_of_items_in_steps.get))  # remove the items that was found to have the max reach from the considereation
+
+    return {
+        "Order of Items": list(get_incremental_reach_summary_metrics.keys()),
+        "Incremental Reach Summary": get_incremental_reach_summary_metrics,
+    }  # returning the dict for the items that are turned on in order
+
+
+
 

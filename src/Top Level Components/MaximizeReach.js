@@ -6,14 +6,7 @@ import { faChartLine } from "@fortawesome/free-solid-svg-icons";
 function MaximizeReach() {
   return (
     <>
-      <Box justify={"center"} align={"center"}>
-        <Button size="lg">
-          <HStack>
-            <FontAwesomeIcon icon={faChartLine} />
-            <Text>Maximize Reach</Text>
-          </HStack>
-        </Button>
-      </Box>
+      <Box justify={"center"} align={"center"}></Box>
     </>
   );
 }
