@@ -128,3 +128,6 @@ def incremental_reach():
 	# print(metric_calculations)
 	calc_max_reach = get_incremental_reach(maxdiff_scores, claims_considered_list, claims_offered_list, num_items_to_turn_on, weights)
 	print(calc_max_reach)
+	data = jsonify(calc_max_reach)
+	return data
+

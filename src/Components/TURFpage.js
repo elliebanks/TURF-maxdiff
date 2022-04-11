@@ -6,7 +6,6 @@ import {
   Flex,
   HStack,
   Text,
-  useCheckboxGroup,
   VStack,
   Tabs,
   TabList,
@@ -14,14 +13,13 @@ import {
   TabPanels,
   TabPanel,
   useToast,
-  useRadioGroup,
   Input,
+  Tooltip,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
 import { ClaimsContext } from "../App";
 import ErrorModal from "./ErrorModal";
 import SummaryMetrics from "../Top Level Components/SummaryMetrics";
-import MaximizeReach from "../Top Level Components/MaximizeReach";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine,
@@ -29,10 +27,12 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import SideBySidePage from "./SideBySidePage";
+import Graph from "./LineChart";
 
 export const CheckboxContext = React.createContext(null);
 export const SummaryContext = React.createContext(null);
 export const SetupContext = React.createContext(null);
+export const ReachContext = React.createContext(null);
 
 const TURFpage = () => {
   // STATE VARIABLES
@@ -82,7 +82,7 @@ const TURFpage = () => {
       });
   };
 
-  // CALCULATE AND PULL REACH SCORES
+  // CALCULATE AND DISPLAY REACH SCORES
   useEffect(
     function getReachScores() {
       fetch("/api/get_reach_scores", {
@@ -104,7 +104,7 @@ const TURFpage = () => {
     [claims]
   );
 
-  // FILTER FOR OFFERED CLAIMS SO WE CAN GET SUMMARY METRICS FOR THOSE CLAIMS
+  // FILTER FOR OFFERED CLAIMS AND CONSIDERED CLAIMS
   const offeredClaims = React.useMemo(() => {
     // sets claim object to an array so that we can filter out the states that are considered/excluded
     const claimStateArray = Object.entries(claimState);
@@ -132,8 +132,9 @@ const TURFpage = () => {
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allConsideredClaimsArray);
   }, [claimState]);
-  console.log(consideredClaims);
+  // console.log(consideredClaims);
 
+  // DISPLAY SUMMARY METRICS OF OFFERED CLAIMS
   useEffect(
     function getSummaryMetrics() {
       fetch("/api/get_summary_metrics", {
@@ -153,11 +154,17 @@ const TURFpage = () => {
     [offeredClaims]
   );
 
+  // MAXIMIZE REACH FUNCTION
   const maximizeReachData = {
     claimsOn: offeredClaims,
     claimsConsidered: consideredClaims,
     numberItemsTurnOn: numberOfItemsToTurnOn,
   };
+
+  const [orderOfItems, setOrderOfItems] = React.useState();
+  const [incrementalReachSummary, setIncrementalReachSummary] = React.useState(
+    {}
+  );
 
   function handleMaximizeReach() {
     let status = 0;
@@ -172,9 +179,23 @@ const TURFpage = () => {
         return res.json();
       })
       .then((data) => {
-        console.log(data);
+        // console.log(data);
+        setOrderOfItems(data["Order of Items"]);
+        setIncrementalReachSummary(data["Incremental Reach Summary"]);
       });
   }
+  console.log(orderOfItems);
+  console.log(incrementalReachSummary);
+  const summaryKeyArray = Object.keys(incrementalReachSummary);
+  console.log(summaryKeyArray);
+
+  const reachData = React.useMemo(
+    () => ({
+      orderOfItems,
+      incrementalReachSummary,
+    }),
+    [orderOfItems, incrementalReachSummary]
+  );
 
   // ADD SETUP TO SIDE BY SIDE PAGE
   const [setups, setSetups] = React.useState([]);
@@ -214,63 +235,80 @@ const TURFpage = () => {
     [setups, setSetups]
   );
 
+  const data = [
+    {
+      name: orderOfItems?.[0],
+      uv: 4000,
+      pv: 2400,
+      amt: 2400,
+    },
+  ];
   return (
     <CheckboxContext.Provider value={checkboxData}>
       <SummaryContext.Provider value={summaryData}>
         <SetupContext.Provider value={setupData}>
-          <Tabs>
-            <TabList>
-              <Tab>Data Table</Tab>
-              <Tab>Side by Side</Tab>
-            </TabList>
-            <TabPanels>
-              <TabPanel>
-                {" "}
-                <HStack spacing={4}>
-                  <Button size={"lg"} type={"submit"} onClick={handleAddSetup}>
-                    <HStack>
-                      <FontAwesomeIcon icon={faPlus} />
-                      <Text>Add Setup to Side by Side View</Text>
-                    </HStack>
-                  </Button>
-                  <Button type={"submit"} size={"lg"} onClick={handleDelete}>
-                    <HStack>
-                      <FontAwesomeIcon icon={faTrashCan} />
-                      <Text>Delete Project</Text>
-                    </HStack>
-                  </Button>
-                </HStack>
-                <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
-                <VStack spacing={10} m={10} p={4}>
-                  <SummaryMetrics />
-                  <Button size="lg" onClick={handleMaximizeReach}>
-                    <HStack>
-                      <FontAwesomeIcon icon={faChartLine} />
-                      <Text>Maximize Reach</Text>
-                    </HStack>
-                  </Button>
-                  <HStack float={"left"}>
-                    <Text>
-                      Number of Considered Claims You Would Like To Offer:{" "}
-                    </Text>
-                    <Input
-                      textAlign={"center"}
-                      value={numberOfItemsToTurnOn}
-                      onChange={(e) => setNumberOfItemsToTurnOn(e.target.value)}
-                      placeholder="1"
-                      size="sm"
-                      w={"20%"}
-                    />
+          <ReachContext.Provider value={reachData}>
+            <Tabs>
+              <TabList>
+                <Tab>Data Table</Tab>
+                <Tab>Side by Side</Tab>
+              </TabList>
+              <TabPanels>
+                <TabPanel>
+                  {" "}
+                  <HStack spacing={4}>
+                    <Button
+                      size={"lg"}
+                      type={"submit"}
+                      onClick={handleAddSetup}
+                    >
+                      <HStack>
+                        <FontAwesomeIcon icon={faPlus} />
+                        <Text>Add Setup to Side by Side View</Text>
+                      </HStack>
+                    </Button>
+                    <Button type={"submit"} size={"lg"} onClick={handleDelete}>
+                      <HStack>
+                        <FontAwesomeIcon icon={faTrashCan} />
+                        <Text>Delete Project</Text>
+                      </HStack>
+                    </Button>
                   </HStack>
-                  <DataTable />
-                </VStack>
-              </TabPanel>
+                  <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
+                  <VStack spacing={10} m={10} p={4}>
+                    <Graph />
+                    <SummaryMetrics />
+                    <Button size="lg" onClick={handleMaximizeReach}>
+                      <HStack>
+                        <FontAwesomeIcon icon={faChartLine} />
+                        <Text>Maximize Reach</Text>
+                      </HStack>
+                    </Button>
+                    <HStack float={"left"}>
+                      <Text>
+                        Number of Considered Claims You Would Like To Offer:{" "}
+                      </Text>
+                      <Input
+                        textAlign={"center"}
+                        value={numberOfItemsToTurnOn}
+                        onChange={(e) =>
+                          setNumberOfItemsToTurnOn(e.target.value)
+                        }
+                        placeholder="1"
+                        size="sm"
+                        w={"20%"}
+                      />
+                    </HStack>
+                    <DataTable />
+                  </VStack>
+                </TabPanel>
 
-              <TabPanel>
-                <SideBySidePage />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+                <TabPanel>
+                  <SideBySidePage />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          </ReachContext.Provider>
         </SetupContext.Provider>
       </SummaryContext.Provider>
     </CheckboxContext.Provider>
