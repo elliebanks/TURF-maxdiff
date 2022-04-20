@@ -5,9 +5,10 @@ from sqlalchemy.ext.mutable import MutableDict
 from app import db
 from app.api.errors import error_response
 from app.main import bp
-from app.models import MaxDiffProject
+from app.models import MaxDiffProject, SubGroup
 from app.save_file import  save_file
-from mdfunctions import process_raw_util_xl_file, calc_reach_metrics, get_incremental_reach
+from mdfunctions import process_raw_util_xl_file, calc_reach_metrics, get_incremental_reach, \
+	process_subgroup_file
 
 
 @bp.route('/api/request_load_pickle_sim', methods=['POST'])
@@ -32,6 +33,44 @@ def request_load_pickle_sim():
 	db.session.add(mdp)
 	db.session.commit()
 	return data
+#
+@bp.route('/api/request_load_subgroup', methods=['POST'])
+def request_load_subgroup():
+	subgroup_fn = save_file(None, "subgroup", "xlsx")
+	request.files["subgroup"].save(subgroup_fn)
+	print(subgroup_fn)
+	results = process_subgroup_file(subgroup_fn)
+	print(results)
+	subgroups = results['subgroups']
+	utilities = results['utilities']
+	data = jsonify(subgroups)
+	sgp = SubGroup()
+	sgp.config=MutableDict({
+		'subgroups': subgroups,
+		'utilities': utilities,
+	})
+	return data
+
+	# print(result)
+
+# 	result = process_raw_util_xl_file(fn)
+# 	claims = result['claims']
+# 	utilities = result['utilities']
+# 	weights = result['weights']
+# 	maxdiff_scores = result['maxdiff_scores']
+# 	data = jsonify(claims)
+# 	print(data)
+	# mdp = MaxDiffProject()
+# 	# mdp.config = MutableDict({
+# 	# 	'claims': claims,
+# 	# 	'utilities': utilities,
+# 	# 	'weights': weights,
+# 	# 	'maxdiff_scores': maxdiff_scores
+# 	# })
+# 	# print(mdp.config)
+# 	# db.session.add(mdp)
+# 	# db.session.commit()
+# 	# return data
 
 @bp.route('/api/get_reach_scores', methods=['POST'])
 def get_reach_scores():

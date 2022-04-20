@@ -39,11 +39,6 @@ export default function SideBySidePage() {
   const avgFormatter = (value) => Math.round(value * 100) / 100;
 
   const summaryMetricKeys = Object.keys(metricRendering);
-  // console.log(
-  //   summaryMetricKeys.map((summaryMetricKey) =>
-  //     setups.map((setup) => setup[1]?.[summaryMetricKey])
-  //   )
-  // );
 
   const handleDeleteSetup = () => {
     setSetups([]);
@@ -133,7 +128,17 @@ export default function SideBySidePage() {
                   textAlign={"center"}
                   boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
                 >
-                  {setup[0]?.[claim]}
+                  {setup[3].includes(claim)
+                    ? (setup[2]?.[claim].Summary_Metrics.Reach * 100).toFixed(
+                        1
+                      ) + "%"
+                    : setup[0]?.[claim] === "Offered"
+                    ? "Already Offered"
+                    : setup[0]?.[claim] === "Considered"
+                    ? "Considered"
+                    : setup[0]?.[claim] === "Excluded"
+                    ? "Excluded"
+                    : ""}
                 </Td>
               ))}
             </Tr>

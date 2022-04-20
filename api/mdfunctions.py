@@ -132,5 +132,24 @@ def get_incremental_reach(max_diff_scores, item_considered, item_on, number_of_i
     }  # returning the dict for the items that are turned on in order
 
 
+def process_subgroup_file(xl_fn):
+    df = pd.read_excel(xl_fn)
+    # row = df.shape[0]  # df.shape[0] = Number of rows, df.shape[1] = number of columns
+    index_col = [col for col in df if 'id' in col.lower()][0]
+    df.set_index("respid", inplace=True)  # Setting the ID as the index
+
+    df_sg = df.fillna(0)  # handles filling in any missing data in the df
+    # inplace = True argument will change the original data set
+
+    rlh_cols = [col for col in df if 'rlh' in col.lower()][:1]
+    df_sg.drop(rlh_cols, axis=1)  # removing RLH from df if they are there
+
+    # print(df)
+    df_sg.drop('responseid', inplace=True, axis=1)
+    utils = df_sg
+    return {
+        "subgroups": [col for col in utils],
+        "utilities": utils,
+    }
 
 

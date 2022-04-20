@@ -1,0 +1,17 @@
+
+
+svg.recharts-surface tspan {
+	font-size: 0.9rem !important;
+	overflow: visible !important;
+}
+
+
+.tooltip {
+	border-radius: 0.5rem;
+	/*background: #3182CE;*/
+	/*color: #FFFFFF;*/
+	padding: 0.5rem;
+	box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+	/*text-align: center;*/
+	width: 20rem;
+}

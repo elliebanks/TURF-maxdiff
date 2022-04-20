@@ -1,5 +1,12 @@
 import React, { useRef, useState } from "react";
-import { Container, Box, Heading, VStack, Button } from "@chakra-ui/react";
+import {
+  Container,
+  Box,
+  Heading,
+  VStack,
+  Button,
+  HStack,
+} from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCloudArrowUp } from "@fortawesome/free-solid-svg-icons";
 import { ClaimsContext } from "../App";
@@ -10,11 +17,22 @@ const UploadFile = () => {
   const [selectedFile, setSelectedFile] = useState();
   const [isSelected, setIsSelected] = useState(false);
 
+  const [subgroupFile, setSubgroupFile] = useState();
+  const [subgroupFileSelected, setSubgroupFileSelected] = useState(false);
+
   const fileInputRef = useRef(null);
 
-  const handleChange = (event) => {
+  const subgroupInputRef = useRef(null);
+
+  const handleDataFile = (event) => {
     setSelectedFile(event.target.files[0]);
     setIsSelected(true);
+    console.log(event.target.files[0]);
+  };
+
+  const handleSubgroupFile = (event) => {
+    setSubgroupFile(event.target.files[0]);
+    setSubgroupFileSelected(true);
     console.log(event.target.files[0]);
   };
 
@@ -41,22 +59,22 @@ const UploadFile = () => {
   };
 
   return (
-    <Box
-      boxShadow={"dark-lg"}
-      borderRadius={"lg"}
-      bg={"whiteAlpha.200"}
-      h={"50vh"}
-      w={"25%"}
-      display={"flex"}
-      position={"static"}
-      justifyContent={"center"}
-      alignContent={"center"}
-      margin={"auto"}
-      padding={20}
-    >
+    // <Box
+    //   boxShadow={"dark-lg"}
+    //   borderRadius={"lg"}
+    //   bg={"whiteAlpha.200"}
+    //   h={"50vh"}
+    //   w={"25%"}
+    //   display={"flex"}
+    //   position={"static"}
+    //   justifyContent={"center"}
+    //   alignContent={"center"}
+    //   margin={"auto"}
+    //   padding={20}
+    // >
+    <>
       <VStack spacing={12} justifyContent={"center"}>
         <Heading>File Upload</Heading>
-
         <Box>
           <FontAwesomeIcon
             icon={faCloudArrowUp}
@@ -65,14 +83,16 @@ const UploadFile = () => {
             cursor={"pointer"}
           />
         </Box>
-
-        <VStack spacing={4}>
+      </VStack>
+      {/*<VStack spacing={4}>*/}
+      <HStack justifyContent={"center"} spacing={12} margin={12}>
+        <VStack>
           <Button
-            size={"lg"}
+            size={"md"}
             padding={6}
             onClick={() => fileInputRef.current.click()}
           >
-            Select .xlsx File
+            Select Data .xlsx File
           </Button>
 
           <input
@@ -80,7 +100,7 @@ const UploadFile = () => {
             type="file"
             accept=".xlsx, .xls"
             ref={fileInputRef}
-            onChange={handleChange}
+            onChange={handleDataFile}
             hidden
             required
           />
@@ -95,17 +115,55 @@ const UploadFile = () => {
             <p>Select a file to show details</p>
           )}
           <Button
-            size={"lg"}
+            size={"md"}
             padding={6}
             type={"submit"}
             value={"Submit"}
             onClick={handleSubmission}
           >
-            Submit
+            Submit Data File
           </Button>
         </VStack>
-      </VStack>
-    </Box>
+
+        {/*<VStack>*/}
+        {/*  <Button*/}
+        {/*    size={"md"}*/}
+        {/*    padding={6}*/}
+        {/*    onClick={() => subgroupInputRef.current.click()}*/}
+        {/*  >*/}
+        {/*    Select Subgroup .xlsx File*/}
+        {/*  </Button>*/}
+        {/*  <input*/}
+        {/*    name="file"*/}
+        {/*    type="file"*/}
+        {/*    accept=".xlsx, .xls"*/}
+        {/*    ref={subgroupInputRef}*/}
+        {/*    onChange={handleSubgroupFile}*/}
+        {/*    hidden*/}
+        {/*    required*/}
+        {/*  />*/}
+        {/*  {subgroupFileSelected ? (*/}
+        {/*    <div>*/}
+        {/*      <p>Filename: {subgroupFile.name}</p>*/}
+        {/*      <p>Filetype: {subgroupFile.type}</p>*/}
+        {/*      <p>Size in bytes: {subgroupFile.size}</p>*/}
+        {/*    </div>*/}
+        {/*  ) : (*/}
+        {/*    <p>Select a file to show details</p>*/}
+        {/*  )}*/}
+        {/*  /!*</VStack>*!/*/}
+        {/*  <Button*/}
+        {/*    size={"md"}*/}
+        {/*    padding={6}*/}
+        {/*    type={"submit"}*/}
+        {/*    value={"Submit"}*/}
+        {/*    onClick={handleSubgroupSubmission}*/}
+        {/*  >*/}
+        {/*    Submit Subgroup File*/}
+        {/*  </Button>*/}
+        {/*</VStack>*/}
+      </HStack>
+    </>
   );
 };
 

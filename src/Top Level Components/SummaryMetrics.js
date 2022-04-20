@@ -1,5 +1,14 @@
-import React from "react";
-import { Table, Tbody, Td, Th, Thead, Tr } from "@chakra-ui/react";
+import React, { useRef, useState } from "react";
+import {
+  Button,
+  Select,
+  Table,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@chakra-ui/react";
 import { SummaryContext } from "../Components/TURFpage";
 
 function SummaryMetrics() {
@@ -22,28 +31,64 @@ function SummaryMetrics() {
   }
 
   return (
-    <Table variant="simple" size={"lg"} w={"50%"}>
-      <Thead>
-        <Tr>
-          <Th>Summary Metrics</Th>
-          <Th>Total Sample</Th>
-        </Tr>
-      </Thead>
-      <Tbody>
-        <Tr>
-          <Td>Average Number of Liked Items :</Td>
-          <Td textAlign={"center"}>{roundedAvgLikedItems}</Td>
-        </Tr>
-        <Tr>
-          <Td>Average Reach :</Td>
-          <Td textAlign={"center"}>{avgReachPercentage}</Td>
-        </Tr>
-        <Tr>
-          <Td>Average Favorite :</Td>
-          <Td textAlign={"center"}>{avgFavPercentage}</Td>
-        </Tr>
-      </Tbody>
-    </Table>
+    <>
+      <Table
+        size={"lg"}
+        variant={"simple"}
+        w={"40%"}
+        marginTop={12}
+        display={"inline-table"}
+      >
+        <Thead>
+          <Tr>
+            <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+              Summary Metrics
+            </Th>
+            <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+              Total Sample
+            </Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          <Tr>
+            <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+              Average Number of Liked Items :
+            </Th>
+            <Td
+              isNumeric
+              boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
+              textAlign={"center"}
+            >
+              {roundedAvgLikedItems}
+            </Td>
+          </Tr>
+          <Tr>
+            <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+              Average Reach :
+            </Th>
+            <Td
+              isNumeric
+              boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
+              textAlign={"center"}
+            >
+              {avgReachPercentage}
+            </Td>
+          </Tr>
+          <Tr>
+            <Th isNumeric boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}>
+              Average Favorite :
+            </Th>
+            <Td
+              isNumeric
+              boxShadow={"5px 0 6px -5px rgba(0,0,0,0.5)"}
+              textAlign={"center"}
+            >
+              {avgFavPercentage}
+            </Td>
+          </Tr>
+        </Tbody>
+      </Table>
+    </>
   );
 }
 

@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
-  Container,
-  Flex,
   HStack,
   Text,
   VStack,
@@ -14,11 +12,18 @@ import {
   TabPanel,
   useToast,
   Input,
-  Tooltip,
+  LightMode,
+  NumberInput,
+  Select,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
-import { ClaimsContext } from "../App";
-import ErrorModal from "./ErrorModal";
+import SideBySidePage from "./SideBySidePage";
+import Graph from "./LineChart";
+import ErrorModal from "./Custom Utils/ErrorModal";
 import SummaryMetrics from "../Top Level Components/SummaryMetrics";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,8 +31,7 @@ import {
   faPlus,
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
-import SideBySidePage from "./SideBySidePage";
-import Graph from "./LineChart";
+import { ClaimsContext } from "../App";
 
 export const CheckboxContext = React.createContext(null);
 export const SummaryContext = React.createContext(null);
@@ -36,6 +40,7 @@ export const ReachContext = React.createContext(null);
 
 const TURFpage = () => {
   // STATE VARIABLES
+  const { claims, setClaims } = React.useContext(ClaimsContext);
   const [reach, setReach] = useState();
   const [favorite, setFavorite] = useState();
   const [summaryMetrics, setSummaryMetrics] = useState({
@@ -43,14 +48,23 @@ const TURFpage = () => {
     2: 0.0,
     3: 0.0,
   });
-  const { claims, setClaims } = React.useContext(ClaimsContext);
   const [claimState, setClaimState] = React.useState(
     Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
   );
   const [isOpen, setIsOpen] = React.useState(false); // state property for Error Modal
 
-  const [numberOfItemsToTurnOn, setNumberOfItemsToTurnOn] = React.useState("");
-  console.log(numberOfItemsToTurnOn);
+  // set state and onchange handler for # of considered claims the user would like to offer
+  const [numberOfItemsToTurnOn, setNumberOfItemsToTurnOn] = React.useState(1);
+
+  const handleNumberInput = (numberOfItemsToTurnOn) =>
+    setNumberOfItemsToTurnOn(numberOfItemsToTurnOn);
+
+  // set state and handler for redirecting to TURF chart tab when max reach button is clicked
+  const [tabIndex, setTabIndex] = React.useState(0);
+
+  const handleTabChange = (index) => {
+    setTabIndex(index);
+  };
 
   // DELETE PROJECT AND SETUP ERROR MODAL
   function onClose() {
@@ -132,7 +146,6 @@ const TURFpage = () => {
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allConsideredClaimsArray);
   }, [claimState]);
-  // console.log(consideredClaims);
 
   // DISPLAY SUMMARY METRICS OF OFFERED CLAIMS
   useEffect(
@@ -161,10 +174,17 @@ const TURFpage = () => {
     numberItemsTurnOn: numberOfItemsToTurnOn,
   };
 
-  const [orderOfItems, setOrderOfItems] = React.useState();
+  const [orderOfItems, setOrderOfItems] = React.useState([]);
   const [incrementalReachSummary, setIncrementalReachSummary] = React.useState(
     {}
   );
+  const handleClaimStateChange = (claim, newValue) => {
+    setClaimState((prev) => {
+      const newClaimState = { ...prev, [claim]: newValue };
+      console.log({ [claim]: newValue });
+      return newClaimState;
+    });
+  };
 
   function handleMaximizeReach() {
     let status = 0;
@@ -179,23 +199,16 @@ const TURFpage = () => {
         return res.json();
       })
       .then((data) => {
-        // console.log(data);
         setOrderOfItems(data["Order of Items"]);
         setIncrementalReachSummary(data["Incremental Reach Summary"]);
+        setTabIndex(1); // redirects to the TURF chart tab panel
       });
   }
-  console.log(orderOfItems);
-  console.log(incrementalReachSummary);
-  const summaryKeyArray = Object.keys(incrementalReachSummary);
-  console.log(summaryKeyArray);
-
-  const reachData = React.useMemo(
-    () => ({
-      orderOfItems,
-      incrementalReachSummary,
-    }),
-    [orderOfItems, incrementalReachSummary]
-  );
+  useEffect(() => {
+    for (let claim of orderOfItems) {
+      handleClaimStateChange(claim, "Offered");
+    }
+  }, [orderOfItems]);
 
   // ADD SETUP TO SIDE BY SIDE PAGE
   const [setups, setSetups] = React.useState([]);
@@ -203,7 +216,12 @@ const TURFpage = () => {
   const toast = useToast();
 
   const handleAddSetup = () => {
-    const newSetup = [claimState, summaryMetrics];
+    const newSetup = [
+      claimState,
+      summaryMetrics,
+      incrementalReachSummary,
+      orderOfItems,
+    ];
     setSetups((prevSetups) => [...prevSetups, newSetup]);
     toast({
       title: "Success!",
@@ -235,39 +253,38 @@ const TURFpage = () => {
     [setups, setSetups]
   );
 
-  const data = [
-    {
-      name: orderOfItems?.[0],
-      uv: 4000,
-      pv: 2400,
-      amt: 2400,
-    },
-  ];
+  const reachData = React.useMemo(
+    () => ({
+      orderOfItems,
+      incrementalReachSummary,
+    }),
+    [orderOfItems, incrementalReachSummary]
+  );
+
   return (
     <CheckboxContext.Provider value={checkboxData}>
       <SummaryContext.Provider value={summaryData}>
         <SetupContext.Provider value={setupData}>
           <ReachContext.Provider value={reachData}>
-            <Tabs>
+            <Tabs
+              variant={"enclosed"}
+              index={tabIndex}
+              onChange={handleTabChange}
+            >
               <TabList>
-                <Tab>Data Table</Tab>
-                <Tab>Side by Side</Tab>
+                <Tab tabIndex={0}>Data Table</Tab>
+                {orderOfItems === undefined ? null : (
+                  <Tab tabIndex={1}>TURF Chart</Tab>
+                )}{" "}
+                {/*TURF Chart tab will only display if the orderOfItems state is*/}
+                {/*defined (which occurs on max reach button click)*/}
+                <Tab tabIndex={2}>Side By Side</Tab>
               </TabList>
               <TabPanels>
                 <TabPanel>
                   {" "}
                   <HStack spacing={4}>
-                    <Button
-                      size={"lg"}
-                      type={"submit"}
-                      onClick={handleAddSetup}
-                    >
-                      <HStack>
-                        <FontAwesomeIcon icon={faPlus} />
-                        <Text>Add Setup to Side by Side View</Text>
-                      </HStack>
-                    </Button>
-                    <Button type={"submit"} size={"lg"} onClick={handleDelete}>
+                    <Button type={"submit"} size={"md"} onClick={handleDelete}>
                       <HStack>
                         <FontAwesomeIcon icon={faTrashCan} />
                         <Text>Delete Project</Text>
@@ -276,33 +293,60 @@ const TURFpage = () => {
                   </HStack>
                   <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
                   <VStack spacing={10} m={10} p={4}>
-                    <Graph />
-                    <SummaryMetrics />
-                    <Button size="lg" onClick={handleMaximizeReach}>
-                      <HStack>
-                        <FontAwesomeIcon icon={faChartLine} />
-                        <Text>Maximize Reach</Text>
+                    <HStack spacing={2}>
+                      <HStack spacing={4}>
+                        <Text>Number of Claims You Would Like To Offer: </Text>
+                        <NumberInput
+                          width={"15%"}
+                          defaultValue={5}
+                          min={1}
+                          max={claims.length - 1}
+                          value={numberOfItemsToTurnOn}
+                          onChange={handleNumberInput}
+                          errorBorderColor={"red.500"}
+                          inputMode={"numeric"}
+                          isRequired={true}
+                          size={"sm"}
+                          // onChange={(e) =>
+                          //    setNumberOfItemsToTurnOn(e.target.value)
+                          //  }
+                        >
+                          <NumberInputField />
+                          <NumberInputStepper>
+                            <NumberIncrementStepper />
+                            <NumberDecrementStepper />
+                          </NumberInputStepper>
+                        </NumberInput>
                       </HStack>
-                    </Button>
-                    <HStack float={"left"}>
-                      <Text>
-                        Number of Considered Claims You Would Like To Offer:{" "}
-                      </Text>
-                      <Input
-                        textAlign={"center"}
-                        value={numberOfItemsToTurnOn}
-                        onChange={(e) =>
-                          setNumberOfItemsToTurnOn(e.target.value)
-                        }
-                        placeholder="1"
-                        size="sm"
-                        w={"20%"}
-                      />
+                      <Button size="md" onClick={handleMaximizeReach}>
+                        <HStack>
+                          <FontAwesomeIcon icon={faChartLine} />
+                          <Text>Maximize Reach</Text>
+                        </HStack>
+                      </Button>
                     </HStack>
                     <DataTable />
                   </VStack>
                 </TabPanel>
-
+                {orderOfItems === undefined ? (
+                  ""
+                ) : (
+                  <TabPanel align={"center"}>
+                    <VStack>
+                      <Graph />
+                      <Button
+                        size={"lg"}
+                        type={"submit"}
+                        onClick={handleAddSetup}
+                      >
+                        <HStack align={"flex-end"}>
+                          <FontAwesomeIcon icon={faPlus} />
+                          <Text>Add Setup to Side by Side View</Text>
+                        </HStack>
+                      </Button>
+                    </VStack>
+                  </TabPanel>
+                )}
                 <TabPanel>
                   <SideBySidePage />
                 </TabPanel>
