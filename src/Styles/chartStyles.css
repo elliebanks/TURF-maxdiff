@@ -1,8 +1,31 @@
+/*.customAxisLabel {*/
+/*	width: 12px;*/
+/*}*/
+/*.recharts-cartesian-axis-tick-value {*/
+/*	max-width: 10px ;*/
+/*	word-break-inside: 10px ;*/
 
+/*}*/
 
+.Text {
+	width: 5px;
+	word-wrap: break-word !important;
+}
+.recharts-text.recharts-cartesian-axis-tick-value {
+	width: 5px;
+	text-align: center;
+	word-wrap: break-word !important;
+
+}
+.recharts-cartesian-axis-ticks {
+	width: 5px;
+	word-wrap: break-word;
+	margin: 10px;
+}
 svg.recharts-surface tspan {
 	font-size: 0.9rem !important;
-	overflow: visible !important;
+	max-width: fit-content;
+	word-wrap: break-word !important;
 }
 
 
@@ -15,3 +38,5 @@ svg.recharts-surface tspan {
 	/*text-align: center;*/
 	width: 20rem;
 }
+
+

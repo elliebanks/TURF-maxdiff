@@ -8,7 +8,7 @@ const CustomToolTip = ({ active, payload }) => {
     return null;
   }
 
-  const properties = payload[0].payload;
+  const properties = payload?.[0]?.payload;
 
   return (
     <div
@@ -22,10 +22,10 @@ const CustomToolTip = ({ active, payload }) => {
     >
       <h4>
         {" "}
-        <strong>Claim :</strong> {properties.Claim}
+        <strong>Claim :</strong> {properties?.Claim}
       </h4>
       <p>
-        <strong>Optimized Reach :</strong> {properties.Reach} %
+        <strong>Optimized Reach :</strong> {properties?.Reach} %
       </p>
     </div>
   );

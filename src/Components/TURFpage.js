@@ -19,12 +19,16 @@ import {
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
 import SideBySidePage from "./SideBySidePage";
 import Graph from "./LineChart";
 import ErrorModal from "./Custom Utils/ErrorModal";
-import SummaryMetrics from "../Top Level Components/SummaryMetrics";
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faChartLine,
@@ -32,11 +36,21 @@ import {
   faTrashCan,
 } from "@fortawesome/free-solid-svg-icons";
 import { ClaimsContext } from "../App";
+import {
+  AddIcon,
+  ChevronDownIcon,
+  DeleteIcon,
+  DownloadIcon,
+  PlusSquareIcon,
+} from "@chakra-ui/icons";
+// import { SubgroupContext } from "./SummaryMetricTable";
+import { TabContext, ReachContext } from "./RunTurf";
+import TURFChart from "./AnotherLineChart";
 
 export const CheckboxContext = React.createContext(null);
 export const SummaryContext = React.createContext(null);
 export const SetupContext = React.createContext(null);
-export const ReachContext = React.createContext(null);
+export const SelectedSubgroupContext = React.createContext(null);
 
 const TURFpage = () => {
   // STATE VARIABLES
@@ -48,23 +62,35 @@ const TURFpage = () => {
     2: 0.0,
     3: 0.0,
   });
+  const [selectedSubgroup, setSelectedSubgroup] = React.useState("Total");
+
+  const [numberOfSubgroupRespondents, setNumberOfSubgroupRespondents] =
+    React.useState(0);
+  // const {
+  //   setTabIndex,
+  //   tabIndex,
+  //   incrementalReachSummary,
+  //   setOrderOfItems,
+  //   orderOfItems,
+  //   setIncrementalReachSummary,
+  // } = React.useContext(ReachContext);
+
+  // const { selectedSubgroup, setSelectedSubgroup } =
+  //   React.useContext(SubgroupContext);
+
   const [claimState, setClaimState] = React.useState(
     Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
   );
+
+  const [tabIndex, setTabIndex] = React.useState(0);
+  const [orderOfItems, setOrderOfItems] = React.useState([]);
+  const [incrementalReachSummary, setIncrementalReachSummary] = React.useState(
+    {}
+  );
+
   const [isOpen, setIsOpen] = React.useState(false); // state property for Error Modal
 
-  // set state and onchange handler for # of considered claims the user would like to offer
-  const [numberOfItemsToTurnOn, setNumberOfItemsToTurnOn] = React.useState(1);
-
-  const handleNumberInput = (numberOfItemsToTurnOn) =>
-    setNumberOfItemsToTurnOn(numberOfItemsToTurnOn);
-
   // set state and handler for redirecting to TURF chart tab when max reach button is clicked
-  const [tabIndex, setTabIndex] = React.useState(0);
-
-  const handleTabChange = (index) => {
-    setTabIndex(index);
-  };
 
   // DELETE PROJECT AND SETUP ERROR MODAL
   function onClose() {
@@ -73,6 +99,7 @@ const TURFpage = () => {
     setIsOpen(false); // ErrorModal is removed
   }
 
+  const toast = useToast();
   const handleDelete = () => {
     let status = 0;
     fetch("/api/project", { method: "DELETE" }) // handleDelete function goes to backend to check for project in db
@@ -98,8 +125,8 @@ const TURFpage = () => {
 
   // CALCULATE AND DISPLAY REACH SCORES
   useEffect(
-    function getReachScores() {
-      fetch("/api/get_reach_scores", {
+    function requestMDReachScores() {
+      fetch("/api/request_maxdiff_reach_scores", {
         method: "POST",
         body: JSON.stringify({ claims }),
         headers: {
@@ -127,7 +154,7 @@ const TURFpage = () => {
     const allCurrentOfferingsArray = claimStateArray.filter(
       ([claim, stateValue]) => stateValue === "Offered"
     );
-    console.log(allCurrentOfferingsArray);
+    // console.log(allCurrentOfferingsArray);
     // we need to work with an object, so turn the array of offered claims back to an object
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allCurrentOfferingsArray);
@@ -141,7 +168,7 @@ const TURFpage = () => {
     const allConsideredClaimsArray = claimStateArray.filter(
       ([claim, stateValue]) => stateValue === "Considered"
     );
-    console.log(allConsideredClaimsArray);
+    // console.log(allConsideredClaimsArray);
     // we need to work with an object, so turn the array of offered claims back to an object
     // so we can send an object to our get summary metrics route
     return Object.fromEntries(allConsideredClaimsArray);
@@ -149,8 +176,8 @@ const TURFpage = () => {
 
   // DISPLAY SUMMARY METRICS OF OFFERED CLAIMS
   useEffect(
-    function getSummaryMetrics() {
-      fetch("/api/get_summary_metrics", {
+    function requestMDSummaryMetrics() {
+      fetch("/api/request_maxdiff_summary_metrics", {
         method: "POST",
         body: JSON.stringify(offeredClaims),
         headers: {
@@ -166,54 +193,12 @@ const TURFpage = () => {
     },
     [offeredClaims]
   );
-
-  // MAXIMIZE REACH FUNCTION
-  const maximizeReachData = {
-    claimsOn: offeredClaims,
-    claimsConsidered: consideredClaims,
-    numberItemsTurnOn: numberOfItemsToTurnOn,
+  const handleTabChange = (index) => {
+    setTabIndex(index);
   };
-
-  const [orderOfItems, setOrderOfItems] = React.useState([]);
-  const [incrementalReachSummary, setIncrementalReachSummary] = React.useState(
-    {}
-  );
-  const handleClaimStateChange = (claim, newValue) => {
-    setClaimState((prev) => {
-      const newClaimState = { ...prev, [claim]: newValue };
-      console.log({ [claim]: newValue });
-      return newClaimState;
-    });
-  };
-
-  function handleMaximizeReach() {
-    let status = 0;
-    fetch("/api/calc_incremental_reach", {
-      method: "POST",
-      body: JSON.stringify(maximizeReachData),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((res) => {
-        return res.json();
-      })
-      .then((data) => {
-        setOrderOfItems(data["Order of Items"]);
-        setIncrementalReachSummary(data["Incremental Reach Summary"]);
-        setTabIndex(1); // redirects to the TURF chart tab panel
-      });
-  }
-  useEffect(() => {
-    for (let claim of orderOfItems) {
-      handleClaimStateChange(claim, "Offered");
-    }
-  }, [orderOfItems]);
 
   // ADD SETUP TO SIDE BY SIDE PAGE
   const [setups, setSetups] = React.useState([]);
-
-  const toast = useToast();
 
   const handleAddSetup = () => {
     const newSetup = [
@@ -221,6 +206,8 @@ const TURFpage = () => {
       summaryMetrics,
       incrementalReachSummary,
       orderOfItems,
+      numberOfSubgroupRespondents,
+      selectedSubgroup,
     ];
     setSetups((prevSetups) => [...prevSetups, newSetup]);
     toast({
@@ -230,6 +217,101 @@ const TURFpage = () => {
       status: "success",
     });
   };
+
+  // const handleDeleteSubgroup = () => {
+  //   let status = 0;
+  //   fetch("/api/delete_subgroup_file", { method: "DELETE" }) // handleDelete function goes to backend to check for project in db
+  //     .then((res) => {
+  //       status = res.status;
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       if (status === 400) {
+  //         setIsOpen(true); // if no project is found error status is returned and ErrorModal is displayed
+  //       } else {
+  //         console.log(data);
+  //         setSelectedSubgroup(data);
+  //         toast({
+  //           title: "Success!",
+  //           description: "Project was deleted.",
+  //           status: "success",
+  //           isClosable: true,
+  //         });
+  //       }
+  //     });
+  // };
+
+  const handleChartExport = () => {
+    fetch("/api/export_chart_to_csv", {
+      method: "POST",
+      body: JSON.stringify({
+        orderOfItems,
+        incrementalReachSummary,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((res) => {
+        // use of .then promise - waiting for response from the backend
+        return res.blob(); // return response for Excel file from backend
+        //  return res.json() // for json
+      })
+      .then((data) => {
+        // data received from the backend
+        console.log(data);
+        // download file
+        const href = window.URL.createObjectURL(data);
+        const a = document.createElement("a");
+        a.download = `TURF_Chart_Simulation.csv`;
+        a.href = href;
+        a.click();
+        a.href = "";
+        return;
+      });
+  };
+
+  const [subgroupFile, setSubgroupFile] = useState();
+
+  const [subgroupFileSelected, setSubgroupFileSelected] = useState(false);
+
+  const [subgroupFilter, setSubgroupFilter] = React.useState([]);
+  const subgroupInputRef = useRef(null);
+  const handleSubgroupFile = (event) => {
+    setSubgroupFile(event.target.files[0]);
+    setSubgroupFileSelected(true);
+    console.log(event.target.files[0]);
+  };
+
+  const handleSubgroupSubmission = () => {
+    let formData = new FormData();
+    formData.append("subgroup", subgroupFile);
+    // show spinning mouse cursor
+    // document.body.style.cursor = "progress";
+    let status = 0;
+    fetch("/api/request_load_subgroup", { method: "POST", body: formData })
+      .then((res) => {
+        status = res.status;
+        return res.json();
+      })
+      .then((data) => {
+        console.log(data);
+        setSubgroupFilter(data);
+        // sets list of claims to the claims from the uploaded Excel file
+      })
+      .finally(() => {
+        // give regular mouse cursor back
+        document.body.style.cursor = "default";
+      });
+  };
+
+  const setupData = React.useMemo(
+    () => ({
+      setups,
+      setSetups,
+    }),
+    [setups, setSetups]
+  );
 
   // CONTEXT DATA
   const checkboxData = React.useMemo(
@@ -241,117 +323,202 @@ const TURFpage = () => {
   );
 
   const summaryData = React.useMemo(
-    () => ({ reach, favorite, summaryMetrics, setSummaryMetrics }),
-    [reach, favorite, summaryMetrics, setSummaryMetrics]
-  );
-
-  const setupData = React.useMemo(
     () => ({
-      setups,
-      setSetups,
+      reach,
+      favorite,
+      summaryMetrics,
+      setSummaryMetrics,
+      setReach,
+      setFavorite,
+      offeredClaims,
+      consideredClaims,
     }),
-    [setups, setSetups]
+    [
+      reach,
+      favorite,
+      summaryMetrics,
+      setSummaryMetrics,
+      setReach,
+      setFavorite,
+      offeredClaims,
+    ]
   );
 
   const reachData = React.useMemo(
     () => ({
       orderOfItems,
       incrementalReachSummary,
+      setOrderOfItems,
+      setIncrementalReachSummary,
+      tabIndex,
+      setTabIndex,
     }),
-    [orderOfItems, incrementalReachSummary]
+    [
+      orderOfItems,
+      incrementalReachSummary,
+      tabIndex,
+      setTabIndex,
+      setOrderOfItems,
+      setIncrementalReachSummary,
+    ]
   );
+
+  const selectedSubgroupData = React.useMemo(
+    () => ({
+      setSubgroupFilter,
+      subgroupFilter,
+      numberOfSubgroupRespondents,
+      setNumberOfSubgroupRespondents,
+      selectedSubgroup,
+      setSelectedSubgroup,
+    }),
+    [
+      setSubgroupFilter,
+      subgroupFilter,
+      numberOfSubgroupRespondents,
+      setNumberOfSubgroupRespondents,
+      selectedSubgroup,
+      setSelectedSubgroup,
+    ]
+  );
+
+  // const subgroupData = React.useMemo(
+  //   () => ({
+  //     selectedSubgroup,
+  //     setSelectedSubgroup
+  //   }),
+  //   [selectedSubgroup, setSelectedSubgroup]
+  // );
+
+  const tabData = React.useMemo(
+    () => ({ tabIndex, setTabIndex }),
+    [tabIndex, setTabIndex]
+  );
+  console.log(orderOfItems);
 
   return (
     <CheckboxContext.Provider value={checkboxData}>
       <SummaryContext.Provider value={summaryData}>
         <SetupContext.Provider value={setupData}>
           <ReachContext.Provider value={reachData}>
-            <Tabs
-              variant={"enclosed"}
-              index={tabIndex}
-              onChange={handleTabChange}
-            >
-              <TabList>
-                <Tab tabIndex={0}>Data Table</Tab>
-                {orderOfItems === undefined ? null : (
-                  <Tab tabIndex={1}>TURF Chart</Tab>
-                )}{" "}
-                {/*TURF Chart tab will only display if the orderOfItems state is*/}
-                {/*defined (which occurs on max reach button click)*/}
-                <Tab tabIndex={2}>Side By Side</Tab>
-              </TabList>
-              <TabPanels>
-                <TabPanel>
-                  {" "}
-                  <HStack spacing={4}>
-                    <Button type={"submit"} size={"md"} onClick={handleDelete}>
-                      <HStack>
-                        <FontAwesomeIcon icon={faTrashCan} />
-                        <Text>Delete Project</Text>
-                      </HStack>
-                    </Button>
-                  </HStack>
-                  <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
-                  <VStack spacing={10} m={10} p={4}>
-                    <HStack spacing={2}>
-                      <HStack spacing={4}>
-                        <Text>Number of Claims You Would Like To Offer: </Text>
-                        <NumberInput
-                          width={"15%"}
-                          defaultValue={5}
-                          min={1}
-                          max={claims.length - 1}
-                          value={numberOfItemsToTurnOn}
-                          onChange={handleNumberInput}
-                          errorBorderColor={"red.500"}
-                          inputMode={"numeric"}
-                          isRequired={true}
-                          size={"sm"}
-                          // onChange={(e) =>
-                          //    setNumberOfItemsToTurnOn(e.target.value)
-                          //  }
+            <SelectedSubgroupContext.Provider value={selectedSubgroupData}>
+              {/*<SubgroupContext.Provider value={subgroupData}>*/}
+              <TabContext.Provider value={tabData}>
+                <Tabs
+                  variant={"enclosed"}
+                  index={tabIndex}
+                  onChange={handleTabChange}
+                >
+                  <TabList>
+                    <Tab tabIndex={0}>Simulation</Tab>
+                    {orderOfItems?.length > 0 ? (
+                      <Tab tabIndex={1}>TURF Chart</Tab>
+                    ) : (
+                      ""
+                    )}
+                    <Tab tabIndex={2}>Previous Simulations</Tab>
+                  </TabList>
+                  <TabPanels>
+                    <TabPanel>
+                      {" "}
+                      <Menu float={"right"}>
+                        <MenuButton
+                          isActive={isOpen}
+                          as={Button}
+                          rightIcon={<ChevronDownIcon />}
+                          display={"flex"}
+                          float={"right"}
                         >
-                          <NumberInputField />
-                          <NumberInputStepper>
-                            <NumberIncrementStepper />
-                            <NumberDecrementStepper />
-                          </NumberInputStepper>
-                        </NumberInput>
-                      </HStack>
-                      <Button size="md" onClick={handleMaximizeReach}>
-                        <HStack>
-                          <FontAwesomeIcon icon={faChartLine} />
-                          <Text>Maximize Reach</Text>
-                        </HStack>
-                      </Button>
-                    </HStack>
-                    <DataTable />
-                  </VStack>
-                </TabPanel>
-                {orderOfItems === undefined ? (
-                  ""
-                ) : (
-                  <TabPanel align={"center"}>
-                    <VStack>
-                      <Graph />
-                      <Button
-                        size={"lg"}
-                        type={"submit"}
-                        onClick={handleAddSetup}
-                      >
-                        <HStack align={"flex-end"}>
-                          <FontAwesomeIcon icon={faPlus} />
-                          <Text>Add Setup to Side by Side View</Text>
-                        </HStack>
-                      </Button>
-                    </VStack>
-                  </TabPanel>
-                )}
-                <TabPanel>
-                  <SideBySidePage />
-                </TabPanel>
-              </TabPanels>
-            </Tabs>
+                          Simulator Options
+                        </MenuButton>
+                        <MenuList>
+                          <input
+                            name={"file"}
+                            type={"file"}
+                            accept={".xlsx, .xls"}
+                            ref={subgroupInputRef}
+                            onChange={handleSubgroupFile}
+                            hidden
+                          />
+                          <MenuItem
+                            icon={<PlusSquareIcon />}
+                            onClick={() => subgroupInputRef.current.click()}
+                          >
+                            {" "}
+                            Upload Subgroup File{"    "}{" "}
+                          </MenuItem>
+                          <MenuItem
+                            onClick={handleDelete}
+                            icon={<DeleteIcon />}
+                          >
+                            Delete Project
+                          </MenuItem>
+                          <MenuItem
+                            // onClick={handleDeleteSubgroup}
+                            icon={<DeleteIcon />}
+                          >
+                            Delete Subgroup File
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
+                      {subgroupFileSelected ? (
+                        <Button size={"xs"} onClick={handleSubgroupSubmission}>
+                          Submit Subgroup File
+                        </Button>
+                      ) : (
+                        ""
+                      )}
+                      <ErrorModal isOpen={isOpen} onClose={onClose} />{" "}
+                      <DataTable />
+                    </TabPanel>
+
+                    {orderOfItems?.length > 0 ? (
+                      <TabPanel>
+                        <Menu align={"right"}>
+                          {({ isOpen }) => (
+                            <>
+                              <MenuButton
+                                isActive={isOpen}
+                                as={Button}
+                                rightIcon={<ChevronDownIcon />}
+                                display={"flex"}
+                                float={"right"}
+                              >
+                                TURF Chart Options
+                              </MenuButton>
+                              <MenuList>
+                                <MenuItem
+                                  onClick={handleChartExport}
+                                  icon={<DownloadIcon />}
+                                >
+                                  Download as CSV
+                                </MenuItem>
+                                <MenuItem
+                                  onClick={handleAddSetup}
+                                  icon={<AddIcon />}
+                                >
+                                  Add to Side by Side View
+                                </MenuItem>
+                                <MenuItem icon={<DeleteIcon />}>
+                                  Delete Chart
+                                </MenuItem>
+                              </MenuList>
+                            </>
+                          )}
+                        </Menu>
+                        <Graph />
+                      </TabPanel>
+                    ) : (
+                      ""
+                    )}
+                    <TabPanel>
+                      <SideBySidePage />
+                    </TabPanel>
+                  </TabPanels>
+                </Tabs>
+              </TabContext.Provider>
+              {/*</SubgroupContext.Provider>*/}
+            </SelectedSubgroupContext.Provider>
           </ReachContext.Provider>
         </SetupContext.Provider>
       </SummaryContext.Provider>
