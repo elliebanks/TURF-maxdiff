@@ -50,6 +50,7 @@ const DataTable = () => {
         setSubgroupFilter(data);
       });
   }, []);
+
   const handleClaimStateChange = (claim, newValue) => {
     setClaimState((prev) => {
       const newClaimState = { ...prev, [claim]: newValue };

@@ -1,24 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Box,
   Button,
-  HStack,
-  Text,
-  VStack,
   Tabs,
   TabList,
   Tab,
   TabPanels,
   TabPanel,
   useToast,
-  Input,
-  LightMode,
-  NumberInput,
-  Select,
-  NumberInputField,
-  NumberInputStepper,
-  NumberIncrementStepper,
-  NumberDecrementStepper,
   Menu,
   MenuButton,
   MenuList,
@@ -28,13 +16,6 @@ import DataTable from "./DataTable";
 import SideBySidePage from "./SideBySidePage";
 import Graph from "./LineChart";
 import ErrorModal from "./Custom Utils/ErrorModal";
-
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faChartLine,
-  faPlus,
-  faTrashCan,
-} from "@fortawesome/free-solid-svg-icons";
 import { ClaimsContext } from "../App";
 import {
   AddIcon,
@@ -43,9 +24,7 @@ import {
   DownloadIcon,
   PlusSquareIcon,
 } from "@chakra-ui/icons";
-// import { SubgroupContext } from "./SummaryMetricTable";
 import { TabContext, ReachContext } from "./RunTurf";
-import TURFChart from "./AnotherLineChart";
 
 export const CheckboxContext = React.createContext(null);
 export const SummaryContext = React.createContext(null);
@@ -66,17 +45,6 @@ const TURFpage = () => {
 
   const [numberOfSubgroupRespondents, setNumberOfSubgroupRespondents] =
     React.useState(0);
-  // const {
-  //   setTabIndex,
-  //   tabIndex,
-  //   incrementalReachSummary,
-  //   setOrderOfItems,
-  //   orderOfItems,
-  //   setIncrementalReachSummary,
-  // } = React.useContext(ReachContext);
-
-  // const { selectedSubgroup, setSelectedSubgroup } =
-  //   React.useContext(SubgroupContext);
 
   const [claimState, setClaimState] = React.useState(
     Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
@@ -89,8 +57,6 @@ const TURFpage = () => {
   );
 
   const [isOpen, setIsOpen] = React.useState(false); // state property for Error Modal
-
-  // set state and handler for redirecting to TURF chart tab when max reach button is clicked
 
   // DELETE PROJECT AND SETUP ERROR MODAL
   function onClose() {
@@ -118,6 +84,7 @@ const TURFpage = () => {
             status: "success",
             isClosable: true,
           });
+          setSubgroupFilter(data);
           setClaims(data); // if project is found - project is deleted from db and claims are set to [] => redirect to Upload File page
         }
       });
@@ -216,30 +183,8 @@ const TURFpage = () => {
       isClosable: true,
       status: "success",
     });
+    setTabIndex(2);
   };
-
-  // const handleDeleteSubgroup = () => {
-  //   let status = 0;
-  //   fetch("/api/delete_subgroup_file", { method: "DELETE" }) // handleDelete function goes to backend to check for project in db
-  //     .then((res) => {
-  //       status = res.status;
-  //       return res.json();
-  //     })
-  //     .then((data) => {
-  //       if (status === 400) {
-  //         setIsOpen(true); // if no project is found error status is returned and ErrorModal is displayed
-  //       } else {
-  //         console.log(data);
-  //         setSelectedSubgroup(data);
-  //         toast({
-  //           title: "Success!",
-  //           description: "Project was deleted.",
-  //           status: "success",
-  //           isClosable: true,
-  //         });
-  //       }
-  //     });
-  // };
 
   const handleChartExport = () => {
     fetch("/api/export_chart_to_csv", {
@@ -267,7 +212,6 @@ const TURFpage = () => {
         a.href = href;
         a.click();
         a.href = "";
-        return;
       });
   };
 
@@ -297,12 +241,31 @@ const TURFpage = () => {
       .then((data) => {
         console.log(data);
         setSubgroupFilter(data);
+        toast({
+          title: "Success!",
+          description: "Subgroup File was uploaded.",
+          isClosable: true,
+          status: "success",
+        });
+
         // sets list of claims to the claims from the uploaded Excel file
       })
       .finally(() => {
         // give regular mouse cursor back
         document.body.style.cursor = "default";
       });
+  };
+
+  const handleDeleteTURFChart = () => {
+    setOrderOfItems([]);
+    setIncrementalReachSummary({});
+    setTabIndex(0);
+    toast({
+      title: "Success!",
+      description: "TURF Chart was deleted.",
+      isClosable: true,
+      status: "success",
+    });
   };
 
   const setupData = React.useMemo(
@@ -382,14 +345,6 @@ const TURFpage = () => {
     ]
   );
 
-  // const subgroupData = React.useMemo(
-  //   () => ({
-  //     selectedSubgroup,
-  //     setSelectedSubgroup
-  //   }),
-  //   [selectedSubgroup, setSelectedSubgroup]
-  // );
-
   const tabData = React.useMemo(
     () => ({ tabIndex, setTabIndex }),
     [tabIndex, setTabIndex]
@@ -410,24 +365,28 @@ const TURFpage = () => {
                   onChange={handleTabChange}
                 >
                   <TabList>
-                    <Tab tabIndex={0}>Simulation</Tab>
+                    <Tab tabIndex={0}> TURF Simulation</Tab>
                     {orderOfItems?.length > 0 ? (
                       <Tab tabIndex={1}>TURF Chart</Tab>
                     ) : (
                       ""
                     )}
-                    <Tab tabIndex={2}>Previous Simulations</Tab>
+                    {setups?.length > 0 ? (
+                      <Tab tabIndex={2}>Previous Simulation Summary</Tab>
+                    ) : (
+                      ""
+                    )}
                   </TabList>
                   <TabPanels>
                     <TabPanel>
                       {" "}
                       <Menu float={"right"}>
                         <MenuButton
-                          isActive={isOpen}
+                          // isActive={isOpen}
                           as={Button}
                           rightIcon={<ChevronDownIcon />}
-                          display={"flex"}
-                          float={"right"}
+                          // display={"flex"}
+                          // float={"right"}
                         >
                           Simulator Options
                         </MenuButton>
@@ -453,12 +412,6 @@ const TURFpage = () => {
                           >
                             Delete Project
                           </MenuItem>
-                          <MenuItem
-                            // onClick={handleDeleteSubgroup}
-                            icon={<DeleteIcon />}
-                          >
-                            Delete Subgroup File
-                          </MenuItem>
                         </MenuList>
                       </Menu>
                       {subgroupFileSelected ? (
@@ -474,38 +427,38 @@ const TURFpage = () => {
 
                     {orderOfItems?.length > 0 ? (
                       <TabPanel>
-                        <Menu align={"right"}>
-                          {({ isOpen }) => (
-                            <>
-                              <MenuButton
-                                isActive={isOpen}
-                                as={Button}
-                                rightIcon={<ChevronDownIcon />}
-                                display={"flex"}
-                                float={"right"}
-                              >
-                                TURF Chart Options
-                              </MenuButton>
-                              <MenuList>
-                                <MenuItem
-                                  onClick={handleChartExport}
-                                  icon={<DownloadIcon />}
-                                >
-                                  Download as CSV
-                                </MenuItem>
-                                <MenuItem
-                                  onClick={handleAddSetup}
-                                  icon={<AddIcon />}
-                                >
-                                  Add to Side by Side View
-                                </MenuItem>
-                                <MenuItem icon={<DeleteIcon />}>
-                                  Delete Chart
-                                </MenuItem>
-                              </MenuList>
-                            </>
-                          )}
+                        <Menu align={"right"} marginBottom={12}>
+                          <MenuButton
+                            // isActive={isOpen}
+                            as={Button}
+                            rightIcon={<ChevronDownIcon />}
+                            // display={"flex"}
+                            // float={"right"}
+                          >
+                            TURF Chart Options
+                          </MenuButton>
+                          <MenuList>
+                            <MenuItem
+                              onClick={handleChartExport}
+                              icon={<DownloadIcon />}
+                            >
+                              Download as CSV
+                            </MenuItem>
+                            <MenuItem
+                              onClick={handleAddSetup}
+                              icon={<AddIcon />}
+                            >
+                              Add to Previous Simulation Summary
+                            </MenuItem>
+                            <MenuItem
+                              onClick={handleDeleteTURFChart}
+                              icon={<DeleteIcon />}
+                            >
+                              Delete Chart
+                            </MenuItem>
+                          </MenuList>
                         </Menu>
+
                         <Graph />
                       </TabPanel>
                     ) : (

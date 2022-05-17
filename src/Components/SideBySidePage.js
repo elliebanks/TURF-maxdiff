@@ -18,9 +18,11 @@ import {
 import { ClaimsContext } from "../App";
 import { SetupContext } from "./TURFpage";
 import { ChevronDownIcon, DeleteIcon, DownloadIcon } from "@chakra-ui/icons";
+import { TabContext } from "./RunTurf";
 
 export default function SideBySidePage() {
   const { colorMode } = useColorMode();
+  const { setTabIndex } = React.useContext(TabContext);
   const { setups, setSetups } = React.useContext(SetupContext);
   console.log(setups);
 
@@ -53,28 +55,28 @@ export default function SideBySidePage() {
 
   const handleDeleteSetup = () => {
     setSetups([]);
+    setTabIndex(0);
   };
 
-  const exportToCSV = (event) => {
-    event.preventDefault();
-    fetch("/api/export_to_csv", {
+  const exportToCSV = () => {
+    fetch("/api/export_prev_sim_to_csv", {
       method: "POST",
-      body: JSON.stringify({ claims, setups }),
+      body: JSON.stringify({ setups }),
       headers: {
         "Content-Type": "application/json",
       },
     })
       .then((res) => {
-        return res.json();
+        return res.blob();
       })
       .then((data) => {
         console.log(data);
-        // const href = window.URL.createObjectURL(data);
-        // const a = document.createElement("a");
-        // a.download = `SideBySide.csv`;
-        // a.href = href;
-        // a.click();
-        // a.href = "";
+        const href = window.URL.createObjectURL(data);
+        const a = document.createElement("a");
+        a.download = `Simulation_Summary.csv`;
+        a.href = href;
+        a.click();
+        a.href = "";
       });
   };
 
@@ -88,14 +90,17 @@ export default function SideBySidePage() {
                 isActive={isOpen}
                 as={Button}
                 rightIcon={<ChevronDownIcon />}
-                alignSelf={"flex-end"}
+                alignSelf={"flex-start"}
+                // alignSelf={"flex-end"}
                 // display={"flex"}
-                // float={"right"}
+                // float={"left"}
               >
                 Previous Simulation Options
               </MenuButton>
               <MenuList>
-                <MenuItem icon={<DownloadIcon />}>Download as CSV</MenuItem>
+                <MenuItem icon={<DownloadIcon />} onClick={exportToCSV}>
+                  Download as CSV
+                </MenuItem>
                 <MenuItem onClick={handleDeleteSetup} icon={<DeleteIcon />}>
                   Delete Setups
                 </MenuItem>

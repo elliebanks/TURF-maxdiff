@@ -21,15 +21,7 @@ export const ReachContext = React.createContext();
 const RunTurf = () => {
   const { claims } = React.useContext(ClaimsContext);
   const { setClaimState } = React.useContext(CheckboxContext);
-  const {
-    reach,
-    favorite,
-    setReach,
-    setFavorite,
-    setSummaryMetrics,
-    offeredClaims,
-    consideredClaims,
-  } = React.useContext(SummaryContext);
+  const { offeredClaims, consideredClaims } = React.useContext(SummaryContext);
 
   const {
     setOrderOfItems,

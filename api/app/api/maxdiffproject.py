@@ -8,7 +8,7 @@ from app.main import bp
 from app.models import MaxDiffProject, SubGroup
 from app.save_file import  save_file
 from mdfunctions import process_raw_util_xl_file, calc_reach_metrics, get_incremental_reach, \
-	process_subgroup_file, filter_for_subgroup, generate_turf_chart_csv
+	process_subgroup_file, filter_for_subgroup, generate_turf_chart_csv, generate_prev_sim_csv
 
 
 # CHECK DB FOR CLAIMS WHEN APP LOADS
@@ -91,12 +91,14 @@ def md_summary_metrics():
 def delete_project_from_db():
 	# check the db to find the project
 	mdp = MaxDiffProject().query.first()
+	sgp = SubGroup().query.first()
 	# if no project is found return error response
 	if mdp is None:
 		return error_response(400)
 	# if project is found: delete project from db, commit to db, return empty list for front end to render Upload File page
 	else:
 		db.session.delete(mdp)
+		db.session.delete(sgp)
 		db.session.commit()
 		return jsonify([])
 
@@ -207,9 +209,6 @@ def sg_summary_metrics():
 
 
 
-
-
-
 @bp.route("/api/export_chart_to_csv", methods=["GET", "POST"])
 def export_chart_to_csv():
 	chart_data = request.get_json() or {}
@@ -224,6 +223,29 @@ def export_chart_to_csv():
 	turf_chart_df = generate_turf_chart_csv(chart_data)
 	turf_chart_df.to_csv(csv_fn, index=False)
 	print(turf_chart_df)
+	return send_file(
+		csv_fn,
+		mimetype=(
+			"text/csv"
+		),
+		as_attachment=True,
+		cache_timeout=0,
+	)
+
+@bp.route("/api/export_prev_sim_to_csv", methods=["GET", "POST"])
+def export_simulations_to_csv():
+	data = request.get_json() or {}
+	print(data)
+	if not os.path.exists(current_app.instance_path):
+		os.mkdir(current_app.instance_path)
+	if not os.path.exists(os.path.join(current_app.instance_path, "files")):
+		os.mkdir(os.path.join(current_app.instance_path, "files"))
+	csv_fn = os.path.join(
+		current_app.instance_path, "files", "Simulation_Summary.csv"
+	)
+	prev_sim_df = generate_prev_sim_csv(data)
+	prev_sim_df.to_csv(csv_fn, index=False)
+	print(prev_sim_df)
 	return send_file(
 		csv_fn,
 		mimetype=(

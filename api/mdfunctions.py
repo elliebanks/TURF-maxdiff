@@ -214,15 +214,6 @@ def generate_turf_chart_csv(chart_data):
         turf_reach.append(row)
 
     print(turf_reach)
-    # subgroup = chart_data['selectedSubgroup']
-    # print(subgroup)
-    #
-    # # turf_reach.append(subgroup)
-    #
-    # number_respondents = chart_data['numberOfSubgroupRespondents']
-    # print(number_respondents)
-    # # turf_reach.append(number_respondents)
-
     rows = turf_reach
 
     turf_df = pd.DataFrame(
@@ -233,6 +224,26 @@ def generate_turf_chart_csv(chart_data):
 
     return turf_df
 
+""" function for creating pd df for side by side page csv export """
+
+def generate_prev_sim_csv(data):
+    get_dict = data['setups']
+    print(get_dict)
+    setup_dict = get_dict[0]
+    setups_dict = setup_dict[0]
+    rows = []
+    for key, value in setups_dict.items():
+        row = []
+        row.append(key)
+        if key in setup_dict[3]:
+            row.append(round(setup_dict[2][key]['Summary_Metrics']['Reach'] * 100, 2))
+        else:
+            row.append(value)
+        rows.append(row)
+
+    prev_sim_df = pd.DataFrame(rows, columns=["Claim", "Optimized Reach"])
+
+    return prev_sim_df
 
 
 
