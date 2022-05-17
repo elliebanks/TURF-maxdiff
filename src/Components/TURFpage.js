@@ -247,8 +247,6 @@ const TURFpage = () => {
           isClosable: true,
           status: "success",
         });
-
-        // sets list of claims to the claims from the uploaded Excel file
       })
       .finally(() => {
         // give regular mouse cursor back
@@ -448,7 +446,7 @@ const TURFpage = () => {
                               onClick={handleAddSetup}
                               icon={<AddIcon />}
                             >
-                              Add to Previous Simulation Summary
+                              Add to Simulation Summary
                             </MenuItem>
                             <MenuItem
                               onClick={handleDeleteTURFChart}
