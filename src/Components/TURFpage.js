@@ -13,7 +13,7 @@ import {
   MenuItem,
 } from "@chakra-ui/react";
 import DataTable from "./DataTable";
-import SideBySidePage from "./SideBySidePage";
+import PrevSimSummary from "./PrevSimSummary";
 import Graph from "./LineChart";
 import ErrorModal from "./Custom Utils/ErrorModal";
 import { ClaimsContext } from "../App";
@@ -465,7 +465,7 @@ const TURFpage = () => {
                       ""
                     )}
                     <TabPanel>
-                      <SideBySidePage />
+                      <PrevSimSummary />
                     </TabPanel>
                   </TabPanels>
                 </Tabs>

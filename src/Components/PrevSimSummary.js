@@ -20,7 +20,7 @@ import { SetupContext } from "./TURFpage";
 import { ChevronDownIcon, DeleteIcon, DownloadIcon } from "@chakra-ui/icons";
 import { TabContext } from "./RunTurf";
 
-export default function SideBySidePage() {
+export default function PrevSimSummary() {
   const { colorMode } = useColorMode();
   const { setTabIndex } = React.useContext(TabContext);
   const { setups, setSetups } = React.useContext(SetupContext);
