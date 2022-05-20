@@ -1,5 +1,7 @@
 import pandas as pd
 from math import e
+import xlsxwriter
+import csv
 
 
 """
@@ -230,6 +232,7 @@ def generate_prev_sim_csv(data):
     get_dict = data['setups']
     print(get_dict)
     setup_dict = get_dict[0]
+    print(setup_dict)
     setups_dict = setup_dict[0]
     rows = []
     for key, value in setups_dict.items():
@@ -241,9 +244,33 @@ def generate_prev_sim_csv(data):
             row.append(value)
         rows.append(row)
 
-    prev_sim_df = pd.DataFrame(rows, columns=["Claim", "Optimized Reach"])
+    prev_sim_df1 = pd.DataFrame(rows, columns=["Claim", "Optimized Reach"])
+    summary_metrics = setup_dict[1]
+    print(summary_metrics)
+    top_row_names = ['Metric', 'Setup']
+    top_data = [['Average Liked', 'Average Reach', 'Average Favorite', 'Subgroup', 'Number of Respondents'],
+                [round(summary_metrics['Average_Number_of_Items_Liked'] * 100 / 100, 3),
+                 round(summary_metrics['Reach'] * 100, 2),
+                 round(summary_metrics['Favorite_Percentage'] * 100, 2), setup_dict[5], setup_dict[4]]]
+    prev_sim_df2 = pd.DataFrame(top_data, index=top_row_names)
+    dfs = [prev_sim_df1, prev_sim_df2]
 
-    return prev_sim_df
+
+    def multiple_dfs(df_list, sheets, file_name, spaces):
+        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
+        row = 0
+        for dataframe in df_list:
+            dataframe.to_excel(writer, sheet_name=sheets, startrow=row, startcol=0)
+            row = row + len(dataframe.index) + spaces + 1
+        writer.save()
+
+    multiple_dfs(dfs, 'TURF_Summary_Export', 'Simulation_Summary.xlsx', 1)
+
+    read_file = pd.read_excel("Simulation_Summary.xlsx")
+    read_file.to_csv("Simulation_Summary.csv")
+    dfs = pd.DataFrame(pd.read_csv("Simulation_Summary.csv", index_col=0))
+
+    return dfs
 
 
 

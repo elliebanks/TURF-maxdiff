@@ -11,7 +11,7 @@ export default function CustomizedTick(props) {
   // let fitSmallestValues = payload.value.match(/(.*?\s){3}/g);
   // let fitMediumValues = payload.value.match(/(.*?\s){2}/g);
   let test = payload.value.match(/\b[\w']+(?:[^\w\n]+[\w']+){0,1}\b/g);
-  console.log(test);
+
   return (
     <g transform={`translate(${x},${y})`}>
       <text

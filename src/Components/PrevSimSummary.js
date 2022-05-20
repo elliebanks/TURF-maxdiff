@@ -14,6 +14,7 @@ import {
   MenuItem,
   useColorMode,
   VStack,
+  CloseButton,
 } from "@chakra-ui/react";
 import { ClaimsContext } from "../App";
 import { SetupContext } from "./TURFpage";
@@ -53,7 +54,7 @@ export default function PrevSimSummary() {
 
   const summaryMetricKeys = Object.keys(metricRendering);
 
-  const handleDeleteSetup = () => {
+  const handleDeleteAllSetups = () => {
     setSetups([]);
     setTabIndex(0);
   };
@@ -80,6 +81,12 @@ export default function PrevSimSummary() {
       });
   };
 
+  const removeSetup = (index) => {
+    console.log(index);
+    let newSetup = setups.filter((setup, i) => i !== index);
+    setSetups(newSetup);
+  };
+
   return (
     <>
       <VStack spacing={12}>
@@ -101,7 +108,7 @@ export default function PrevSimSummary() {
                 <MenuItem icon={<DownloadIcon />} onClick={exportToCSV}>
                   Download as CSV
                 </MenuItem>
-                <MenuItem onClick={handleDeleteSetup} icon={<DeleteIcon />}>
+                <MenuItem onClick={handleDeleteAllSetups} icon={<DeleteIcon />}>
                   Delete Setups
                 </MenuItem>
               </MenuList>
@@ -109,21 +116,21 @@ export default function PrevSimSummary() {
           )}
         </Menu>
 
-        <Table
-          size={"lg"}
-          variant={"simple"}
-          w={"85%"}
-          align={"center"}
-          // display={"flex"}
-          // flexDirection={"column"}
-
-          // marginTop={25}
-        >
+        <Table size={"lg"} variant={"simple"} w={"85%"} align={"center"}>
           <Thead>
             <Td />
             <Td />
             {setups.map((setup, i) => (
-              <Th textAlign={"right"}>Setup {i + 1}</Th>
+              <Th textAlign={"right"}>
+                <CloseButton
+                  id={i}
+                  size={"sm"}
+                  p={4}
+                  marginBottom={6}
+                  onClick={() => removeSetup(i)}
+                />
+                Setup {i + 1}
+              </Th>
             ))}
           </Thead>
           <Thead>

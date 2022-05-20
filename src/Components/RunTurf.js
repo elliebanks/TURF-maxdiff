@@ -1,7 +1,12 @@
 import React, { useEffect } from "react";
 import { CheckboxContext, SummaryContext } from "./TURFpage";
 import {
+  Alert,
+  AlertIcon,
+  Box,
   Button,
+  CloseButton,
+  Container,
   HStack,
   NumberDecrementStepper,
   NumberIncrementStepper,
@@ -9,6 +14,8 @@ import {
   NumberInputField,
   NumberInputStepper,
   Text,
+  useDisclosure,
+  useToast,
   VStack,
 } from "@chakra-ui/react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -56,6 +63,11 @@ const RunTurf = () => {
       return newClaimState;
     });
   };
+
+  const toast = useToast();
+
+  const [error, setError] = React.useState(null);
+
   function handleMaximizeReach() {
     let status = 0;
     fetch("/api/calc_incremental_reach", {
@@ -63,32 +75,71 @@ const RunTurf = () => {
       body: JSON.stringify(maximizeReachData),
       headers: {
         "Content-Type": "application/json",
+        Accept: "application/json",
       },
     })
       .then((res) => {
+        status = res.status;
         return res.json();
       })
       .then((data) => {
-        setTimeout(() => setOrderOfItems(data["Order of Items"]), 0.1);
-        setTimeout(
-          () => setIncrementalReachSummary(data["Incremental Reach Summary"]),
-          0.1
-        );
-        setTabIndex(1); // redirects to the TURF chart tab panel
+        if (status === 500) {
+          setError(data.message);
+          setTimeout(() => setError(null), 7000);
+        } else {
+          setTimeout(() => setOrderOfItems(data["Order of Items"]), 0.1);
+          setTimeout(
+            () => setIncrementalReachSummary(data["Incremental Reach Summary"]),
+            0.1
+          );
+          setTabIndex(1); // redirects to the TURF chart tab panel
+        }
       });
   }
 
   useEffect(() => {
-    for (let claim of orderOfItems) {
-      handleClaimStateChange(claim, "Offered");
+    console.log(error);
+  }, [error]);
+
+  useEffect(() => {
+    console.log(orderOfItems);
+    if (orderOfItems) {
+      for (let claim of orderOfItems) {
+        handleClaimStateChange(claim, "Offered");
+      }
     }
   }, [orderOfItems]);
 
+  const handleErrorClose = () => {
+    setError(null);
+  };
+
   return (
     <VStack spacing={4}>
+      {error ? (
+        <Alert
+          status="error"
+          justifyContent={"center"}
+          width={"fit-content"}
+          borderRadius={"5px"}
+        >
+          <AlertIcon />
+          {error}
+          <CloseButton
+            size={"sm"}
+            alignSelf="flex-start"
+            position="relative"
+            right={-2}
+            top={-2}
+            onClick={handleErrorClose}
+          />
+        </Alert>
+      ) : null}
       <HStack spacing={2}>
         <HStack spacing={4} float={"right"}>
-          <Text>Number of Claims You Would Like To Offer: </Text>
+          <Text>
+            Number of Claims You Would Like to Add to Current Offerings:{" "}
+          </Text>
           <NumberInput
             width={"15%"}
             defaultValue={5}
@@ -111,6 +162,7 @@ const RunTurf = () => {
             </NumberInputStepper>
           </NumberInput>
         </HStack>
+
         <Button size="md" onClick={handleMaximizeReach}>
           <HStack>
             <FontAwesomeIcon icon={faChartLine} />

@@ -256,7 +256,7 @@ def export_simulations_to_csv():
 	)
 
 
-@bp.route("/api/calc_incremental_reach", methods=["GET", "POST"])
+@bp.route("/api/calc_incremental_reach", methods=["POST"])
 def incremental_reach():
 	mdp = MaxDiffProject().query.first()
 	get_config = mdp.config
@@ -270,10 +270,11 @@ def incremental_reach():
 	# print(claims_offered_dict)
 	claims_considered_dict = maximize_reach_data["claimsConsidered"]
 	claims_considered_list = list(claims_considered_dict.keys())
+	length_considered_claims = len(claims_considered_list)
+	if num_items_to_turn_on > length_considered_claims:
+		return {"message" : f"You are not considering enough claims to offer {num_items_to_turn_on} additional claims."}, 500
 	claims_offered_list = list(claims_offered_dict.keys())
-	# print(claims_offered_list)
-	metric_calculations = calc_reach_metrics(maxdiff_scores, claims_offered_list, weights)
-	# print(metric_calculations)
+	# metric_calculations = calc_reach_metrics(maxdiff_scores, claims_offered_list, weights)
 	calc_max_reach = get_incremental_reach(maxdiff_scores, claims_considered_list, claims_offered_list, num_items_to_turn_on, weights)
 	# print(calc_max_reach)
 	data = jsonify(calc_max_reach)
