@@ -64,7 +64,7 @@ const DataTable = () => {
     setClaimState((prev) => {
       const newClaimState = Object.keys(prev).map((claim) => [
         claim,
-        "Excluded", // setting to excluded for testing purposes
+        "Considered",
       ]);
       return Object.fromEntries(newClaimState);
     });
