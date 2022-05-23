@@ -10,14 +10,6 @@ if __name__ == "__main__":
 		passthrough_errors=True,
 	)
 
-@app.route('/')
-def index():
-	return app.send_static_file('index.html')
-
-
-@app.errorhandler(404)
-def not_found(e):
-	return app.send_static_file('index.html')
 
 @app.shell_context_processor
 def shell_context():
