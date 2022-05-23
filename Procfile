@@ -1,1 +1,1 @@
-web: cd api; gunicorn flaskapp:app
+web: cd api && flask db upgrade; gunicorn flaskapp:app
