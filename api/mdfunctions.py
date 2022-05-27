@@ -1,8 +1,22 @@
 import pandas as pd
+from flask import Response
 from math import e
+from openpyxl import Workbook
+from openpyxl.worksheet.pagebreak import Break
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import (
+    PatternFill,
+    Border,
+    Side,
+    Alignment,
+    Protection,
+    Font,
+    NamedStyle,
+)
 import xlsxwriter
 import csv
 
+from openpyxl.writer.excel import save_virtual_workbook
 
 """
 Function for taking in the values from the sawtooth exported file, and returning the raw utilities and the rescaled utilities
@@ -229,48 +243,142 @@ def generate_turf_chart_csv(chart_data):
 """ function for creating pd df for side by side page csv export """
 
 def generate_prev_sim_csv(data):
-    get_dict = data['setups']
-    print(get_dict)
-    setup_dict = get_dict[0]
+    get_dict = data
+    claims = data['claims']
+    setup_dict = data['setups']
+    summary_metric_headers = data['setupSummaryMetricHeaders']
+    print(claims)
     print(setup_dict)
-    setups_dict = setup_dict[0]
-    rows = []
-    for key, value in setups_dict.items():
-        row = []
-        row.append(key)
-        if key in setup_dict[3]:
-            row.append(round(setup_dict[2][key]['Summary_Metrics']['Reach'] * 100, 2))
-        else:
-            row.append(value)
-        rows.append(row)
+    # output = HttpResponse(
+    #     mimetype='application/application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    filename = 'Simulation_Summary.xlsx'
+    wb = Workbook()
+    sheet = wb.active
+    # styles
+    heading_font = Font(size=11, bold=True)
+    heading = NamedStyle(name='Heading')
+    wb.add_named_style(heading)
+    heading.font = heading_font
 
-    prev_sim_df1 = pd.DataFrame(rows, columns=["Claim", "Optimized Reach"])
-    summary_metrics = setup_dict[1]
-    print(summary_metrics)
-    top_row_names = ['Metric', 'Setup']
-    top_data = [['Average Liked', 'Average Reach', 'Average Favorite', 'Subgroup', 'Number of Respondents'],
-                [round(summary_metrics['Average_Number_of_Items_Liked'] * 100 / 100, 3),
-                 round(summary_metrics['Reach'] * 100, 2),
-                 round(summary_metrics['Favorite_Percentage'] * 100, 2), setup_dict[5], setup_dict[4]]]
-    prev_sim_df2 = pd.DataFrame(top_data, index=top_row_names)
-    dfs = [prev_sim_df1, prev_sim_df2]
+    percent_value = NamedStyle(name='Percentage')
+    wb.add_named_style(percent_value)
+    percent_value.number_format = '0.00%'
+
+    # Claim Header
+    headers = ['Claim']
+    start_claim_header_row = 1
+    start_claim_header_col = 2
+
+    for i, header in enumerate(headers):
+        current_row = start_claim_header_row
+        column_letter = get_column_letter(start_claim_header_col)
+        cell_ref = f"{column_letter}{current_row}"
+        sheet[cell_ref] = header
+        sheet[cell_ref].style = heading
+
+    # # Setup Header
+    # setup_title = "Setup "
+    # start_setup_header_row = 1
+    # start_setup_header_col = 3
+    #
+    # for header_index, header in enumerate(setup_dict):
+    #     current_row = start_setup_header_row
+    #     column_letter = get_column_letter(start_setup_header_col)
+    #     cell_ref = f"{column_letter}{current_row}"
+    #     sheet[cell_ref] = header_index
+    #     sheet[cell_ref].style = heading
+    #
+    #     for col_index, col_data in enumerate(setup_dict):
+    #         current_col = start_setup_header_col + 1
+    #         column_letter = get_column_letter(current_col)
+    #         cell_ref = f"{column_letter}{current_row}"
+    #         sheet[cell_ref] = setup_title + str(col_index)
+    #         sheet[cell_ref].style = heading
+
+    # Side by Side Claim and Claim States Table
+    starting_col_index = 2
+    starting_row_index = 2
+
+    for index, claim in enumerate(claims):
+        current_row = starting_row_index + index
+        column_letter = get_column_letter(starting_col_index)
+        cell_ref = f"{column_letter}{current_row}"
+        sheet[cell_ref] = claim
+        sheet[cell_ref].style = heading
+
+        for i, setup in enumerate(setup_dict):
+            setup_claims_on = setup[3]
+            current_col = starting_col_index + i + 1
+            column_letter = get_column_letter(current_col)
+            cell_ref = f"{column_letter}{current_row}"
+            if claim in setup_claims_on:
+                sheet[cell_ref] = setup[2][claim]['Summary_Metrics']['Reach']
+                sheet[cell_ref].style = percent_value
+            elif setup[0][claim] == "Offered":
+                sheet[cell_ref] = "Already Offered"
+            elif setup[0][claim] == "Considered":
+                sheet[cell_ref] = "Considered"
+            elif setup[0][claim] == "Excluded":
+                sheet[cell_ref] = "Excluded"
+            else:
+                sheet[cell_ref] = ""
+
+    # Summary Metrics Header
+    start_metric_header_row = 16
+    start_metric_header_col = 2
+
+    for i, header in enumerate(summary_metric_headers):
+        current_row = start_metric_header_row
+        column_letter = get_column_letter(start_metric_header_col)
+        cell_ref = f"{column_letter}{current_row}"
+        sheet[cell_ref] = "Summary Metrics"
+        sheet[cell_ref].style = heading
+
+    # Summary Metrics Table
+
+    start_col_index = 2
+    start_row_index = 17
+
+    for i, header in enumerate(summary_metric_headers):
+        current_row = start_row_index + i
+        column_letter = get_column_letter(start_col_index)
+        cell_ref = f"{column_letter}{current_row}"
+        sheet[cell_ref] = header
+        sheet[cell_ref].style = heading
+
+        for id, setup in enumerate(setup_dict):
+            current_col = starting_col_index + id + 1
+            column_letter = get_column_letter(current_col)
+            cell_ref = f"{column_letter}{current_row}"
+            if header == "Subgroup":
+                sheet[cell_ref] = setup[5]
+            elif header == "Number of Respondents":
+                sheet[cell_ref] = setup[4]
+            elif header == "Average Liked":
+                sheet[cell_ref] = round(setup[1]["Average_Number_of_Items_Liked"], 2)
+            elif header == "Average Reach":
+                sheet[cell_ref] = setup[1]["Reach"]
+                sheet[cell_ref].style = percent_value
+            elif header == "Average Favorite":
+                sheet[cell_ref] = setup[1]["Favorite_Percentage"]
+                sheet[cell_ref].style = percent_value
+            else:
+                sheet[cell_ref] = ""
+
+    wb.save(filename=filename)
+    print(wb)
+    return save_virtual_workbook(wb)
+
+# Response(
+#         save_virtual_workbook(wb),
+#         headers={
+#             'Content-Disposition': 'attachment; filename=sheet.xlsx',
+#             'Content-type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+#         }
+#     )
 
 
-    def multiple_dfs(df_list, sheets, file_name, spaces):
-        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')
-        row = 0
-        for dataframe in df_list:
-            dataframe.to_excel(writer, sheet_name=sheets, startrow=row, startcol=0)
-            row = row + len(dataframe.index) + spaces + 1
-        writer.save()
 
-    multiple_dfs(dfs, 'TURF_Summary_Export', 'Simulation_Summary.xlsx', 1)
-
-    read_file = pd.read_excel("Simulation_Summary.xlsx")
-    read_file.to_csv("Simulation_Summary.csv")
-    dfs = pd.DataFrame(pd.read_csv("Simulation_Summary.csv", index_col=0))
-
-    return dfs
 
 
 

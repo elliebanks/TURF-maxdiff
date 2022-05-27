@@ -30,15 +30,7 @@ const DataTable = () => {
     SelectedSubgroupContext
   );
 
-  const {
-    reach,
-    favorite,
-    setReach,
-    setFavorite,
-    setSummaryMetrics,
-    offeredClaims,
-    consideredClaims,
-  } = React.useContext(SummaryContext);
+  const { reach, favorite } = React.useContext(SummaryContext);
 
   const { claims } = React.useContext(ClaimsContext);
 

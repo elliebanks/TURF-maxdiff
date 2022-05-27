@@ -28,6 +28,7 @@ export default function PrevSimSummary() {
   console.log(setups);
 
   const { claims } = React.useContext(ClaimsContext);
+  console.log(claims);
 
   const setupSummaryMetricHeaders = [
     "Subgroup",
@@ -62,7 +63,7 @@ export default function PrevSimSummary() {
   const exportToCSV = () => {
     fetch("/api/export_prev_sim_to_csv", {
       method: "POST",
-      body: JSON.stringify({ setups }),
+      body: JSON.stringify({ claims, setups, setupSummaryMetricHeaders }),
       headers: {
         "Content-Type": "application/json",
       },
@@ -74,7 +75,7 @@ export default function PrevSimSummary() {
         console.log(data);
         const href = window.URL.createObjectURL(data);
         const a = document.createElement("a");
-        a.download = `Simulation_Summary.csv`;
+        a.download = `Simulation_Summary.xlsx`;
         a.href = href;
         a.click();
         a.href = "";

@@ -1,6 +1,6 @@
 import os
 
-from flask import request, jsonify, current_app, send_file
+from flask import request, jsonify, current_app, send_file, make_response
 from sqlalchemy.ext.mutable import MutableDict
 from app import db
 from app.api.errors import error_response
@@ -236,24 +236,30 @@ def export_chart_to_csv():
 def export_simulations_to_csv():
 	data = request.get_json() or {}
 	print(data)
-	if not os.path.exists(current_app.instance_path):
-		os.mkdir(current_app.instance_path)
-	if not os.path.exists(os.path.join(current_app.instance_path, "files")):
-		os.mkdir(os.path.join(current_app.instance_path, "files"))
-	csv_fn = os.path.join(
-		current_app.instance_path, "files", "Simulation_Summary.csv"
-	)
-	prev_sim_df = generate_prev_sim_csv(data)
-	prev_sim_df.to_csv(csv_fn, index=False)
-	print(prev_sim_df)
-	return send_file(
-		csv_fn,
-		mimetype=(
-			"text/csv"
-		),
-		as_attachment=True,
-		cache_timeout=0,
-	)
+	output = make_response(generate_prev_sim_csv(data))
+	output.headers["Content-Disposition"] = "attachment; filename=" + \
+											"sheet.xlsx"
+	output.headers["Content-type"] = \
+		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+	# if not os.path.exists(current_app.instance_path):
+	# 	os.mkdir(current_app.instance_path)
+	# if not os.path.exists(os.path.join(current_app.instance_path, "files")):
+	# 	os.mkdir(os.path.join(current_app.instance_path, "files"))
+	# cs_fn = os.path.join(
+	# 	current_app.instance_path, "files", "Simulation_Summary.xlsx"
+	# )
+	# openpyxl_file = generate_prev_sim_csv(data)
+	return output
+
+# send_file(
+# 		openpyxl_file,
+# 		mimetype=(
+# 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+# 		),
+# 		as_attachment=True,
+# 		cache_timeout=0,
+# 	)
 
 
 @bp.route("/api/calc_incremental_reach", methods=["POST"])
