@@ -107,7 +107,7 @@ export default function PrevSimSummary() {
               </MenuButton>
               <MenuList>
                 <MenuItem icon={<DownloadIcon />} onClick={exportToCSV}>
-                  Download as CSV
+                  Export Simulation Summary
                 </MenuItem>
                 <MenuItem onClick={handleDeleteAllSetups} icon={<DeleteIcon />}>
                   Delete Setups

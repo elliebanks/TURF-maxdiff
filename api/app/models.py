@@ -1,9 +1,13 @@
 import base64
 import pickle
+
+from flask_login import UserMixin
 from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import VARCHAR, TypeDecorator
+from werkzeug.security import check_password_hash, generate_password_hash
+
 from app import db
 
 
@@ -27,6 +31,25 @@ class PickleEncodedDict(TypeDecorator):
             value = pickle.loads(base64.b64decode(value.encode("utf-8")))
         return value
 
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key = True)
+    user = db.Column(db.String(64), index=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
+#
+#     def set_password(self, password):
+#         self.password_hash = generate_password_hash(password)
+#
+#     def check_password(self, password):
+#         return check_password_hash(self.password_hash, password)
+#
+    def __repr__(self):
+        return '<User {}>'.format(self.user)
+#
+# @login.user_loader
+# def load_user(id):
+#     return User.query.get(int(id))
+
 
 
 # Use new column type in a database table
@@ -49,22 +72,5 @@ class SubGroup(db.Model):
 
     def __repr__(self):
         return f"<SubGroup {self.config}>"
-#
-# Base = declarative_base()
-#
-# class MaxDiffProject(Base):
-#
-#     __tablename__ = 'maxdiff data'
-#     id = db.Column(db.Integer, primary_key=True)
-#     config = db.Column("config", MutableDict.as_mutable(PickleEncodedDict))
-#
-#
-# class Subgroup(Base):
-#
-#     __tablename__ = 'subgroup'
-#     id = db.Column(db.Integer, primary_key=True)
-#     config=db.Column("config",  MutableDict.as_mutable(PickleEncodedDict))
-#
-# Base.metadata.create_all(engine)
 
 

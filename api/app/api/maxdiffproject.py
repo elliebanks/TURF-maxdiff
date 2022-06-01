@@ -52,6 +52,13 @@ def request_load_pickle_sim():
 	print(mdp.config)
 	db.session.add(mdp)
 	db.session.commit()
+	mdp = MaxDiffProject().query.first()
+	# if there is a project found in the db, get the list of claims from the project's config
+	project_config = mdp.config
+	claims = project_config['claims']
+	print(claims)
+	# jsonify the list of claims in order to be an acceptable response for the front end & return the data for rendering of Data Table
+	data = jsonify(claims)
 	return data
 
 

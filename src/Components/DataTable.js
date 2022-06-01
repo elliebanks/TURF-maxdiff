@@ -20,7 +20,7 @@ import {
   SelectedSubgroupContext,
   SummaryContext,
 } from "./TURFpage";
-import { ClaimsContext } from "../App.js";
+import { ClaimsContext } from "../App";
 import SummaryMetricTable from "./SummaryMetricTable";
 import RunTurf from "./RunTurf";
 

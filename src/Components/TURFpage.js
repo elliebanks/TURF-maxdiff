@@ -47,7 +47,7 @@ const TURFpage = () => {
     React.useState(0);
 
   const [claimState, setClaimState] = React.useState(
-    Object.fromEntries(claims.map((claim) => [claim, "Considered"]))
+    Object.fromEntries(claims?.map((claim) => [claim, "Considered"]))
   );
 
   const [tabIndex, setTabIndex] = React.useState(0);
